@@ -1,6 +1,6 @@
 # Endpoints da API TJDFT
 
-> Documentação em construção. Endpoints sendo descobertos via engenharia reversa.
+> Documentação baseada em engenharia reversa. Última atualização: 2026-03-02
 
 ## Base URL
 
@@ -8,89 +8,114 @@
 https://www.tjdft.jus.br
 ```
 
-## Endpoints Conhecidos
+## Status da API
 
-### 1. Consulta de Jurisprudência
+⚠️ **O TJDFT não possui uma API REST documentada para jurisprudência.**
+
+O site utiliza **Plone CMS** e os endpoints descobertos são do sistema de busca padrão do Plone, não uma API estruturada de jurisprudência.
+
+## Endpoints Descobertos
+
+### 1. Busca Ajax (Plone)
 
 ```
-GET /jurisprudencia/busca
+GET /@@ajax-search
 ```
 
 **Parâmetros:**
 | Parâmetro | Tipo | Descrição |
 |-----------|------|-----------|
-| `termo` | string | Termo de busca |
-| `tipo` | string | Tipo de decisão (acordao, decisao, sentença) |
-| `data_inicial` | date | Data inicial (DD/MM/YYYY) |
-| `data_final` | date | Data final (DD/MM/YYYY) |
-| `orgao` | string | Órgão julgador |
-| `relator` | string | Nome do relator |
+| `SearchableText` | string | Termo de busca |
 
-### 2. Consulta de Acórdãos
-
-```
-GET /jurisprudencia/acordaos
+**Exemplo:**
+```bash
+curl "https://www.tjdft.jus.br/@@ajax-search?SearchableText=habeas%20corpus"
 ```
 
-### 3. Consulta de Decisões
-
-```
-GET /jurisprudencia/decisoes
-```
-
-### 4. Diário da Justiça Eletrônico
-
-```
-GET /diario-da-justica-eletronico
-```
-
-## Formato de Resposta
-
+**Resposta:**
 ```json
 {
-  "resultados": [
+  "total": 2603,
+  "items": [
     {
-      "numero": "2024XXX123456",
-      "classe": "Habeas Corpus",
-      "assunto": "Direito Penal",
-      "relator": "Des. Fulano de Tal",
-      "orgao_julgador": "2ª Turma Criminal",
-      "data_julgamento": "2024-01-15",
-      "data_publicacao": "2024-01-20",
-      "ementa": "Ementa da decisão...",
-      "inteiro_teor_url": "/jurisprudencia/2024XXX123456/inteiro-teor"
+      "id": "3ad148d4c54944df80f7d51936085d93",
+      "title": "Habeas data",
+      "description": "",
+      "url": "https://www.tjdft.jus.br/consultas/jurisprudencia/...",
+      "state": "published"
     }
-  ],
-  "total": 100,
-  "pagina": 1,
-  "por_pagina": 20
+  ]
 }
 ```
 
-## Observações
+**Limitações:**
+- Retorna páginas do site, não especificamente acórdãos
+- Não há filtros por tipo de decisão
+- Não há dados estruturados (ementa, relator, etc)
 
-1. A API pode requerer rate limiting
-2. Alguns endpoints podem requerer autenticação
-3. Formato de datas pode variar
-4. Respostas podem ser paginadas
+### 2. Busca do Site (Plone)
 
-## Descoberta de Endpoints
-
-Para descobrir novos endpoints, usar:
-
-```bash
-# Verificar headers
-curl -I https://www.tjdft.jus.br/jurisprudencia
-
-# Testar endpoints comuns
-curl https://www.tjdft.jus.br/api/v1/jurisprudencia
-curl https://www.tjdft.jus.br/api/jurisprudencia
-curl https://www.tjdft.jus.br/api/acordaos
 ```
+GET /@@search
+```
+
+**Parâmetros:**
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `SearchableText` | string | Termo de busca |
+| `path` | string | Caminho para limitar busca |
+
+**Resposta:** HTML (não JSON)
+
+## Endpoints Testados (não funcionais)
+
+| Endpoint | Status |
+|----------|--------|
+| `/api/v1/jurisprudencia` | 404 |
+| `/api/jurisprudencia` | 404 |
+| `/api/acordaos` | 404 |
+| `/ws/jurisprudencia` | 404 |
+| `/rest/jurisprudencia` | 404 |
+
+## Sistema do TJDFT
+
+O site do TJDFT é construído sobre **Plone CMS**:
+
+- Busca padrão: `@@search`
+- API ajax: `@@ajax-search`
+- Não há API REST nativa para jurisprudência
+
+## Alternativas
+
+### 1. Web Scraping
+- Página de jurisprudência: `https://www.tjdft.jus.br/consultas/jurisprudencia/jurisprudencia`
+- Requer parsing de HTML
+- Risco de mudanças no layout
+
+### 2. Contato Oficial
+- Solicitar documentação via ouvidoria
+- URL: https://www.tjdft.jus.br/ouvidoria
+
+### 3. DadosJusBR
+- API alternativa com dados do judiciário
+- URL: https://api.dadosjusbr.org/v1/orgao/tjdft
+- Dados de remuneração, não jurisprudência
 
 ## Próximos Passos
 
-- [ ] Confirmar endpoints funcionais
-- [ ] Documentar autenticação (se necessária)
-- [ ] Mapear todos os parâmetros
-- [ ] Criar testes automatizados
+1. **Análise com DevTools** - Interceptar requisições ao fazer busca
+2. **Contato oficial** - Solicitar API documentada
+3. **Web scraping** - Como alternativa temporária
+
+## Resultados dos Testes E2E
+
+```
+Teste                    Status
+─────────────────────────────────
+ajax_search              ✅ PASSOU
+site_search              ✅ PASSOU
+jurisprudencia_page      ✅ PASSOU
+common_endpoints         ❌ FALHOU
+
+Total: 3/4 testes passaram
+```
