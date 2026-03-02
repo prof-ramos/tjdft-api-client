@@ -1,5 +1,13 @@
 """
 Cliente para a API de Jurisprudência do TJDFT.
+
+API Oficial: https://jurisdf.tjdft.jus.br/api/v1/pesquisa
+
+Uso:
+    from tjdft import TJDFTClient
+    
+    client = TJDFTClient()
+    resultados = client.pesquisar(query="habeas corpus")
 """
 
 import requests
@@ -14,172 +22,234 @@ class TJDFTClient:
     """
     Cliente para a API de Jurisprudência do TJDFT.
     
+    API Oficial: https://jurisdf.tjdft.jus.br/api/v1/pesquisa
+    
     Exemplo:
         >>> client = TJDFTClient()
-        >>> resultados = client.buscar_jurisprudencia(termo="habeas corpus")
+        >>> resultados = client.pesquisar(query="dano moral")
         >>> for r in resultados:
-        ...     print(r.numero, r.ementa[:50])
+        ...     print(r.processo, r.nome_relator)
     """
     
-    BASE_URL = "https://www.tjdft.jus.br"
+    API_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
+    
+    # Campos disponíveis para filtros
+    CAMPOS_FILTRO = [
+        "base",
+        "subbase", 
+        "origem",
+        "uuid",
+        "identificador",
+        "processo",
+        "nomeRelator",
+        "nomeRevisor",
+        "nomeRelatorDesignado",
+        "descricaoOrgaoJulgador",
+        "dataJulgamento",
+        "dataPublicacao",
+        "descricaoClasseCnj",
+    ]
     
     def __init__(
         self,
         timeout: int = 30,
-        retries: int = 3,
-        user_agent: str = "TJDFT-API-Client/0.1.0"
+        user_agent: str = "TJDFT-API-Client/0.2.0"
     ):
         """
         Inicializa o cliente.
         
         Args:
             timeout: Tempo máximo de espera em segundos
-            retries: Número de tentativas em caso de falha
             user_agent: User-Agent para as requisições
         """
         self.timeout = timeout
-        self.retries = retries
         self.session = requests.Session()
         self.session.headers.update({
             "User-Agent": user_agent,
+            "Content-Type": "application/json",
             "Accept": "application/json",
-            "Accept-Language": "pt-BR,pt;q=0.9",
         })
     
-    def buscar_jurisprudencia(
+    def pesquisar(
         self,
-        termo: str,
-        tipo: Optional[str] = None,
-        data_inicial: Optional[date] = None,
-        data_final: Optional[date] = None,
-        orgao: Optional[str] = None,
-        relator: Optional[str] = None,
-        pagina: int = 1,
-        por_pagina: int = 20
+        query: str,
+        pagina: int = 0,
+        tamanho: int = 20,
+        filtros: Optional[Dict[str, str]] = None
     ) -> ResultadoBusca:
         """
-        Busca jurisprudência no TJDFT.
+        Pesquisa jurisprudência no TJDFT.
         
         Args:
-            termo: Termo de busca
-            tipo: Tipo de decisão (acordao, decisao, sentenca)
-            data_inicial: Data inicial
-            data_final: Data final
-            orgao: Órgão julgador
-            relator: Nome do relator
-            pagina: Número da página
-            por_pagina: Resultados por página
+            query: Termo de busca
+            pagina: Número da página (começa em 0)
+            tamanho: Resultados por página
+            filtros: Dicionário com filtros (campo: valor)
             
         Returns:
             ResultadoBusca com os resultados encontrados
+            
+        Example:
+            >>> resultados = client.pesquisar(
+            ...     query="habeas corpus",
+            ...     filtros={"nomeRelator": "CARMEN BITTENCOURT"}
+            ... )
         """
-        params = {
-            "termo": termo,
+        payload = {
+            "query": query,
             "pagina": pagina,
-            "por_pagina": por_pagina,
+            "tamanho": tamanho,
         }
         
-        if tipo:
-            params["tipo"] = tipo
-        if data_inicial:
-            params["data_inicial"] = data_inicial.strftime("%d/%m/%Y")
-        if data_final:
-            params["data_final"] = data_final.strftime("%d/%m/%Y")
-        if orgao:
-            params["orgao"] = orgao
-        if relator:
-            params["relator"] = relator
+        if filtros:
+            termos_acessorios = []
+            for campo, valor in filtros.items():
+                if campo in self.CAMPOS_FILTRO:
+                    termos_acessorios.append({
+                        "campo": campo,
+                        "valor": valor
+                    })
+            if termos_acessorios:
+                payload["termosAcessorios"] = termos_acessorios
         
-        # TODO: Implementar endpoint real quando descoberto
-        response = self.session.get(
-            f"{self.BASE_URL}/jurisprudencia/busca",
-            params=params,
+        response = self.session.post(
+            self.API_URL,
+            json=payload,
             timeout=self.timeout
         )
         
         response.raise_for_status()
         
-        return self._parse_resultado(response.json())
+        return self._parse_resposta(response.json())
     
-    def buscar_acordao(self, numero: str) -> Optional[Acordao]:
+    def pesquisar_por_relator(
+        self,
+        query: str,
+        relator: str,
+        tamanho: int = 20
+    ) -> ResultadoBusca:
         """
-        Busca um acórdão pelo número.
+        Pesquisa por termo filtrando por relator.
         
         Args:
-            numero: Número do processo/acórdão
+            query: Termo de busca
+            relator: Nome do relator
+            tamanho: Resultados por página
             
         Returns:
-            Acordao encontrado ou None
+            ResultadoBusca com os resultados
         """
-        response = self.session.get(
-            f"{self.BASE_URL}/jurisprudencia/acordao/{numero}",
-            timeout=self.timeout
+        return self.pesquisar(
+            query=query,
+            filtros={"nomeRelator": relator},
+            tamanho=tamanho
         )
-        
-        if response.status_code == 404:
-            return None
-        
-        response.raise_for_status()
-        return Acordao.from_dict(response.json())
     
-    def buscar_decisao(self, numero: str) -> Optional[Decisao]:
+    def pesquisar_por_orgao(
+        self,
+        query: str,
+        orgao: str,
+        tamanho: int = 20
+    ) -> ResultadoBusca:
         """
-        Busca uma decisão pelo número.
+        Pesquisa por termo filtrando por órgão julgador.
         
         Args:
-            numero: Número do processo/decisão
+            query: Termo de busca
+            orgao: Nome do órgão julgador
+            tamanho: Resultados por página
             
         Returns:
-            Decisao encontrada ou None
+            ResultadoBusca com os resultados
         """
-        response = self.session.get(
-            f"{self.BASE_URL}/jurisprudencia/decisao/{numero}",
-            timeout=self.timeout
+        return self.pesquisar(
+            query=query,
+            filtros={"descricaoOrgaoJulgador": orgao},
+            tamanho=tamanho
+        )
+    
+    def pesquisar_por_periodo(
+        self,
+        query: str,
+        data_inicial: date,
+        data_final: date,
+        tamanho: int = 20
+    ) -> ResultadoBusca:
+        """
+        Pesquisa por termo filtrando por período de publicação.
+        
+        Args:
+            query: Termo de busca
+            data_inicial: Data inicial
+            data_final: Data final
+            tamanho: Resultados por página
+            
+        Returns:
+            ResultadoBusca com os resultados
+        """
+        # Nota: A API pode não suportar range de datas diretamente
+        # Este método usa dataPublicacao como filtro único
+        return self.pesquisar(
+            query=query,
+            filtros={
+                "dataPublicacao": data_inicial.strftime("%Y-%m-%d")
+            },
+            tamanho=tamanho
+        )
+    
+    def buscar_por_processo(self, numero_processo: str) -> Optional[Dict[str, Any]]:
+        """
+        Busca decisão por número do processo.
+        
+        Args:
+            numero_processo: Número do processo
+            
+        Returns:
+            Dicionário com dados da decisão ou None
+        """
+        resultados = self.pesquisar(
+            query=numero_processo,
+            filtros={"processo": numero_processo},
+            tamanho=1
         )
         
-        if response.status_code == 404:
-            return None
-        
-        response.raise_for_status()
-        return Decisao.from_dict(response.json())
+        if resultados:
+            return resultados[0]
+        return None
     
-    def listar_orgaos_julgadores(self) -> List[str]:
-        """
-        Lista os órgãos julgadores disponíveis.
-        
-        Returns:
-            Lista de nomes dos órgãos julgadores
-        """
-        # TODO: Implementar endpoint real
-        return [
-            "1ª Turma Criminal",
-            "2ª Turma Criminal",
-            "1ª Turma Cível",
-            "2ª Turma Cível",
-            "3ª Turma Cível",
-            "4ª Turma Cível",
-            "5ª Turma Cível",
-            "Câmara Criminal",
-            "Turma Recursal dos Juizados Especiais",
-            "Órgão Especial",
-        ]
-    
-    def _parse_resultado(self, data: Dict[str, Any]) -> ResultadoBusca:
+    def _parse_resposta(self, data: Dict[str, Any]) -> ResultadoBusca:
         """Parseia resposta da API."""
         resultados = []
         
-        for item in data.get("resultados", []):
-            tipo = item.get("tipo", "acordao")
-            if tipo == "acordao":
-                resultados.append(Acordao.from_dict(item))
-            else:
-                resultados.append(Decisao.from_dict(item))
+        for registro in data.get("registros", []):
+            # Determina se é acórdão ou decisão baseado na base
+            base = registro.get("base", "").lower()
+            
+            resultado = {
+                "uuid": registro.get("uuid", ""),
+                "identificador": registro.get("identificador", ""),
+                "processo": registro.get("processo", ""),
+                "ementa": registro.get("ementa", ""),
+                "inteiro_teor": registro.get("inteiroTeor", ""),
+                "nome_relator": registro.get("nomeRelator", ""),
+                "nome_revisor": registro.get("nomeRevisor", ""),
+                "orgao_julgador": registro.get("descricaoOrgaoJulgador", ""),
+                "data_publicacao": registro.get("dataPublicacao", ""),
+                "data_julgamento": registro.get("dataJulgamento", ""),
+                "classe_cnj": registro.get("descricaoClasseCnj", ""),
+                "codigo_classe_cnj": registro.get("codigoClasseCnj", ""),
+                "base": base,
+                "subbase": registro.get("subbase", ""),
+                "possui_inteiro_teor": registro.get("possuiInteiroTeor", False),
+            }
+            resultados.append(resultado)
         
         return ResultadoBusca(
             resultados=resultados,
-            total=data.get("total", 0),
-            pagina=data.get("pagina", 1),
-            por_pagina=data.get("por_pagina", 20)
+            total=data.get("hits", 0),
+            pagina=data.get("pagina", 0),
+            por_pagina=len(resultados),
+            agregacoes=data.get("agregações", {})
         )
     
     def __enter__(self):

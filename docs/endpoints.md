@@ -1,113 +1,128 @@
 # Endpoints da API TJDFT
 
-> Documentação baseada em engenharia reversa. Última atualização: 2026-03-02
+> **API Oficial descoberta!** Atualizado em: 2026-03-02
 
 ## Base URL
 
 ```
-https://www.tjdft.jus.br
+https://jurisdf.tjdft.jus.br/api/v1
 ```
 
-## Status da API
+## Endpoint Principal
 
-⚠️ **O TJDFT não possui uma API REST documentada para jurisprudência.**
-
-O site utiliza **Plone CMS** e os endpoints descobertos são do sistema de busca padrão do Plone, não uma API estruturada de jurisprudência.
-
-## Endpoints Descobertos
-
-### 1. Busca Ajax (Plone)
+### Pesquisa de Jurisprudência
 
 ```
-GET /@@ajax-search
+POST /pesquisa
 ```
 
-**Parâmetros:**
+**URL completa:** `https://jurisdf.tjdft.jus.br/api/v1/pesquisa`
+
+**Formato:** JSON (body)
+
+**Parâmetros obrigatórios:**
 | Parâmetro | Tipo | Descrição |
 |-----------|------|-----------|
-| `SearchableText` | string | Termo de busca |
+| `query` | string | Termo principal da pesquisa |
+| `pagina` | int | Número da página (começa em 0) |
+| `tamanho` | int | Resultados por página |
 
-**Exemplo:**
+**Parâmetro opcional:**
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `termosAcessorios` | array | Lista de filtros adicionais |
+
+### Filtros Disponíveis (termosAcessorios)
+
+| Campo | Descrição |
+|-------|-----------|
+| `base` | Base de dados da decisão |
+| `subbase` | Subbase de dados |
+| `origem` | Origem da decisão |
+| `uuid` | Identificador UUID da decisão |
+| `identificador` | Identificador da decisão |
+| `processo` | Número do processo |
+| `nomeRelator` | Nome do relator |
+| `nomeRevisor` | Nome do revisor |
+| `nomeRelatorDesignado` | Nome do relator designado |
+| `descricaoOrgaoJulgador` | Nome do órgão julgador |
+| `dataJulgamento` | Data do julgamento (YYYY-MM-DD) |
+| `dataPublicacao` | Data da publicação (YYYY-MM-DD) |
+| `descricaoClasseCnj` | Classe processual CNJ |
+
+## Exemplo de Requisição
+
 ```bash
-curl "https://www.tjdft.jus.br/@@ajax-search?SearchableText=habeas%20corpus"
+curl -X POST https://jurisdf.tjdft.jus.br/api/v1/pesquisa \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Dano moral",
+    "termosAcessorios": [
+      {
+        "campo": "nomeRelator",
+        "valor": "CARMEN BITTENCOURT"
+      }
+    ],
+    "pagina": 0,
+    "tamanho": 10
+  }'
 ```
 
-**Resposta:**
+## Exemplo de Resposta
+
 ```json
 {
-  "total": 2603,
-  "items": [
+  "hits": 1234,
+  "agregações": {},
+  "paginação": {},
+  "registros": [
     {
-      "id": "3ad148d4c54944df80f7d51936085d93",
-      "title": "Habeas data",
-      "description": "",
-      "url": "https://www.tjdft.jus.br/consultas/jurisprudencia/...",
-      "state": "published"
+      "sequencial": 1,
+      "base": "decisoes",
+      "subbase": "decisoes-monocraticas",
+      "uuid": "29df78c5-af48-48ee-b8f4-7db0bea4cff6",
+      "identificador": "70016492",
+      "dataPublicacao": "2025-03-25T03:00:00.000Z",
+      "ementa": "[texto da ementa]",
+      "processo": "0710649-40.2025.8.07.0000",
+      "nomeRelator": "CARMEN BITTENCOURT",
+      "descricaoOrgaoJulgador": "8ª Turma Cível",
+      "codigoClasseCnj": 202,
+      "inteiroTeor": "[texto integral]",
+      "possuiInteiroTeor": false
     }
   ]
 }
 ```
 
-**Limitações:**
-- Retorna páginas do site, não especificamente acórdãos
-- Não há filtros por tipo de decisão
-- Não há dados estruturados (ementa, relator, etc)
+## Campos da Resposta
 
-### 2. Busca do Site (Plone)
+| Campo | Descrição |
+|-------|-----------|
+| `hits` | Total de decisões encontradas |
+| `agregações` | Lista de relatores, revisores e órgãos |
+| `registros` | Array com as decisões |
+| `ementa` | Ementa da decisão |
+| `inteiroTeor` | Texto integral (se disponível) |
+| `processo` | Número do processo |
+| `nomeRelator` | Nome do relator |
+| `descricaoOrgaoJulgador` | Órgão julgador |
+
+---
+
+## Endpoints Legados (Plone CMS)
+
+### Busca Ajax
 
 ```
-GET /@@search
+GET /@@ajax-search?SearchableText=termo
 ```
 
-**Parâmetros:**
-| Parâmetro | Tipo | Descrição |
-|-----------|------|-----------|
-| `SearchableText` | string | Termo de busca |
-| `path` | string | Caminho para limitar busca |
+**Nota:** Este é o endpoint de busca geral do site, não específico para jurisprudência.
 
-**Resposta:** HTML (não JSON)
+---
 
-## Endpoints Testados (não funcionais)
-
-| Endpoint | Status |
-|----------|--------|
-| `/api/v1/jurisprudencia` | 404 |
-| `/api/jurisprudencia` | 404 |
-| `/api/acordaos` | 404 |
-| `/ws/jurisprudencia` | 404 |
-| `/rest/jurisprudencia` | 404 |
-
-## Sistema do TJDFT
-
-O site do TJDFT é construído sobre **Plone CMS**:
-
-- Busca padrão: `@@search`
-- API ajax: `@@ajax-search`
-- Não há API REST nativa para jurisprudência
-
-## Alternativas
-
-### 1. Web Scraping
-- Página de jurisprudência: `https://www.tjdft.jus.br/consultas/jurisprudencia/jurisprudencia`
-- Requer parsing de HTML
-- Risco de mudanças no layout
-
-### 2. Contato Oficial
-- Solicitar documentação via ouvidoria
-- URL: https://www.tjdft.jus.br/ouvidoria
-
-### 3. DadosJusBR
-- API alternativa com dados do judiciário
-- URL: https://api.dadosjusbr.org/v1/orgao/tjdft
-- Dados de remuneração, não jurisprudência
-
-## Próximos Passos
-
-1. **Análise com DevTools** - Interceptar requisições ao fazer busca
-2. **Contato oficial** - Solicitar API documentada
-3. **Web scraping** - Como alternativa temporária
-
-## Resultados dos Testes E2E
+## Testes E2E
 
 ```
 Teste                    Status
