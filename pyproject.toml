@@ -37,6 +37,12 @@ dev = [
     "isort>=5.12.0",
     "mypy>=1.0.0",
 ]
+agent = [
+    "google-generativeai>=0.3.0",
+]
+all = [
+    "tjdft-api-client[dev,agent]",
+]
 
 [project.urls]
 Homepage = "https://github.com/prof-ramos/tjdft-api-client"

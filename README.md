@@ -62,6 +62,65 @@ resultados = client.pesquisar(
 | `processo` | Número do processo |
 | `descricaoClasseCnj` | Classe processual CNJ |
 
+## 🤖 Agente de Jurisprudência com IA
+
+O pacote inclui um agente que combina a API do TJDFT com o **Google Gemini** para análise inteligente de casos jurídicos.
+
+### Instalação com suporte a IA
+
+```bash
+pip install tjdft-api-client[agent]
+```
+
+### Configuração
+
+```bash
+export GEMINI_API_KEY='sua-chave-api'
+```
+
+Obtenha sua chave em: https://aistudio.google.com/app/apikey
+
+### Uso
+
+```python
+from tjdft import JurisprudenciaAgent
+
+# Criar agente
+agent = JurisprudenciaAgent()
+
+# Analisar caso
+analise = agent.analisar_caso(
+    descricao="""
+    Cliente não recebeu CNH renovada após 30 dias do pedido.
+    Pagou todas as taxas e realizou exames.
+    Sistema do DETRAN mostra "sem observações".
+    """,
+    termos_busca=[
+        "DETRAN CNH renovação",
+        "obrigação fazer administração",
+        "tutela urgência documento"
+    ]
+)
+
+# Resultados
+print(f"Jurisprudências encontradas: {analise.jurisprudencias_encontradas}")
+print(f"Análise: {analise.analise_ia}")
+print(f"Sugestões: {analise.sugestoes}")
+print(f"Precedentes: {analise.precedentes}")
+```
+
+### Funcionalidades do Agente
+
+- **Busca automática** de jurisprudência relacionada
+- **Análise com IA** do caso e das jurisprudências encontradas
+- **Identificação de precedentes** relevantes
+- **Sugestões práticas** para a ação judicial
+- **Resumo de decisões** específicas
+
+### Exemplo completo
+
+Veja `examples/agente_jurisprudencia.py` para um exemplo interativo completo.
+
 ## Documentação
 
 - [Endpoints da API](docs/endpoints.md)
