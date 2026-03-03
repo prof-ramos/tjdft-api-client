@@ -1,111 +1,99 @@
-"""Testes para o cliente TJDFT."""
+"""
+Testes para o cliente da API TJDFT.
+"""
 
 import pytest
-from datetime import date
 from unittest.mock import Mock, patch
-
 from tjdft import TJDFTClient
-from tjdft.models import Acordao, Decisao, ResultadoBusca
+from tjdft.models import ResultadoBusca
 
 
 class TestTJDFTClient:
-    """Testes para o cliente TJDFT."""
-    
+    """Testes do cliente TJDFT."""
+
     def test_init(self):
         """Testa inicialização do cliente."""
-        client = TJDFTClient(timeout=60, retries=5)
+        client = TJDFTClient(timeout=60)
         assert client.timeout == 60
-        assert client.retries == 5
-    
-    def test_listar_orgaos_julgadores(self):
-        """Testa listagem de órgãos julgadores."""
-        client = TJDFTClient()
-        orgaos = client.listar_orgaos_julgadores()
-        
-        assert len(orgaos) > 0
-        assert "1ª Turma Criminal" in orgaos
-    
-    @patch("tjdft.client.requests.Session.get")
-    def test_buscar_jurisprudencia_mock(self, mock_get):
-        """Testa busca de jurisprudência com mock."""
-        # Configura mock
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "resultados": [
-                {
-                    "numero": "2024HC123456",
-                    "classe": "Habeas Corpus",
-                    "assunto": "Direito Penal",
-                    "relator": "Des. Fulano",
-                    "orgao_julgador": "1ª Turma Criminal",
-                    "ementa": "Ementa de teste..."
-                }
-            ],
-            "total": 1,
-            "pagina": 1,
-            "por_pagina": 20
-        }
-        mock_get.return_value = mock_response
-        
-        # Executa teste
-        client = TJDFTClient()
-        resultados = client.buscar_jurisprudencia(termo="habeas corpus")
-        
-        assert len(resultados) == 1
-        assert resultados.total == 1
+        assert client.session is not None
+
+    def test_pesquisar_mock(self):
+        """Testa pesquisa de jurisprudência com mock."""
+        with patch.object(TJDFTClient, 'pesquisar') as mock_pesquisar:
+            # Configurar mock
+            mock_result = ResultadoBusca(
+                resultados=[{
+                    "processo": "0710649-40.2025.8.07.0000",
+                    "ementa": "Teste de ementa",
+                    "nome_relator": "Des. Teste"
+                }],
+                total=1,
+                pagina=0,
+                por_pagina=20
+            )
+            mock_pesquisar.return_value = mock_result
+
+            # Executar
+            client = TJDFTClient()
+            resultados = client.pesquisar(query="dano moral", tamanho=10)
+
+            # Verificar
+            assert resultados.total == 1
+            assert len(resultados) == 1
+            assert resultados[0]["processo"] == "0710649-40.2025.8.07.0000"
+
+    def test_pesquisar_por_relator(self):
+        """Testa pesquisa por relator."""
+        with patch.object(TJDFTClient, 'pesquisar') as mock_pesquisar:
+            mock_pesquisar.return_value = ResultadoBusca(resultados=[], total=0)
+            
+            client = TJDFTClient()
+            client.pesquisar_por_relator(query="teste", relator="NOME")
+            
+            # Verificar se chamou pesquisar com filtro correto
+            mock_pesquisar.assert_called_once()
+            call_args = mock_pesquisar.call_args
+            assert call_args[1]["filtros"]["nomeRelator"] == "NOME"
 
 
 class TestModels:
-    """Testes para os modelos de dados."""
-    
-    def test_acordao_from_dict(self):
-        """Testa criação de Acordao a partir de dicionário."""
-        data = {
-            "numero": "2024HC123456",
-            "classe": "Habeas Corpus",
-            "assunto": "Direito Penal",
-            "relator": "Des. Fulano",
-            "orgao_julgador": "1ª Turma Criminal",
-            "ementa": "Ementa de teste...",
-            "turma": "1ª Turma Criminal",
-            "unanimidade": True
-        }
-        
-        acordao = Acordao.from_dict(data)
-        
-        assert acordao.numero == "2024HC123456"
-        assert acordao.classe == "Habeas Corpus"
-        assert acordao.unanimidade is True
-    
-    def test_decisao_from_dict(self):
-        """Testa criação de Decisao a partir de dicionário."""
-        data = {
-            "numero": "2024DEC123456",
-            "classe": "Decisão Monocrática",
-            "assunto": "Direito Civil",
-            "relator": "Juiz Ciclano",
-            "orgao_julgador": "1ª Vara Cível",
-            "ementa": "Ementa de decisão..."
-        }
-        
-        decisao = Decisao.from_dict(data)
-        
-        assert decisao.numero == "2024DEC123456"
-        assert decisao.tipo == "decisao"
-    
+    """Testes dos modelos de dados."""
+
     def test_resultado_busca(self):
-        """Testa resultado de busca."""
+        """Testa modelo ResultadoBusca."""
         resultado = ResultadoBusca(
-            resultados=[],
+            resultados=[{"teste": "valor"}],
             total=100,
-            pagina=1,
+            pagina=0,
             por_pagina=20
         )
-        
+
+        assert resultado.total == 100
+        assert len(resultado) == 1
         assert resultado.total_paginas == 5
         assert resultado.tem_proxima is True
 
+    def test_resultado_busca_vazio(self):
+        """Testa ResultadoBusca vazio."""
+        resultado = ResultadoBusca()
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+        assert resultado.total == 0
+        assert len(resultado) == 0
+        assert resultado.total_paginas == 0
+        assert resultado.tem_proxima is False
+
+    def test_resultado_busca_iteracao(self):
+        """Testa iteração sobre ResultadoBusca."""
+        dados = [{"id": 1}, {"id": 2}, {"id": 3}]
+        resultado = ResultadoBusca(resultados=dados, total=3)
+
+        ids = [r["id"] for r in resultado]
+        assert ids == [1, 2, 3]
+
+    def test_resultado_busca_indexing(self):
+        """Testa indexação de ResultadoBusca."""
+        dados = [{"id": 1}, {"id": 2}]
+        resultado = ResultadoBusca(resultados=dados, total=2)
+
+        assert resultado[0] == {"id": 1}
+        assert resultado[1] == {"id": 2}

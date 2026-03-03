@@ -1,6 +1,7 @@
 # TJDFT API Client
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![UV](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![API Status](https://img.shields.io/badge/API-Online-brightgreen.svg)](https://jurisdf.tjdft.jus.br/api/v1/pesquisa)
 
@@ -37,32 +38,41 @@
 
 ## 📦 Instalação
 
-### Via pip (recomendado)
+### Via UV (recomendado) ⚡
+
+```bash
+# Instalar UV
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clonar e configurar
+git clone https://github.com/prof-ramos/tjdft-api-client.git
+cd tjdft-api-client
+uv sync
+
+# Executar
+uv run python -c "from tjdft import TJDFTClient; print('✅ Instalado!')"
+```
+
+### Via pip
 
 ```bash
 pip install git+https://github.com/prof-ramos/tjdft-api-client.git
 ```
 
-### Via git clone
+### Extras Opcionais
 
 ```bash
-git clone https://github.com/prof-ramos/tjdft-api-client.git
-cd tjdft-api-client
-pip install -e .
+# Com suporte async
+uv sync --extra async
+
+# Com suporte a IA (OpenAI)
+uv sync --extra ai
+
+# Tudo (desenvolvimento completo)
+uv sync --all-extras
 ```
 
-### Dependências Opcionais
-
-```bash
-# Para cliente otimizado
-pip install cachetools tiktoken
-
-# Para async
-pip install aiohttp
-
-# Para análise com IA
-pip install openai
-```
+> 📖 Veja [docs/UV.md](docs/UV.md) para guia completo do UV
 
 ---
 
@@ -431,18 +441,17 @@ Contribuições são bem-vindas! Por favor:
 git clone https://github.com/prof-ramos/tjdft-api-client.git
 cd tjdft-api-client
 
-# Criar venv
-python -m venv .venv
-source .venv/bin/activate
-
-# Instalar dependências
-pip install -e ".[dev]"
+# Configurar com UV
+uv sync
 
 # Rodar testes
-pytest tests/
+uv run pytest tests/
 
 # Formatar
-black src/ tests/
+uv run black src/ tests/
+
+# Lint
+uv run ruff check src/ tests/
 ```
 
 ---
