@@ -23,14 +23,33 @@ from .client import TJDFTClient
 from .models import Acordao, Decisao, ResultadoBusca
 from .agent import JurisprudenciaAgent, AnaliseJurisprudencial
 from .analise import AnaliseMagistrados, PerfilMagistrado
+from .tokens import TokenCounter, TokenCount, count_prompt_tokens, estimate_openai_cost
+from .client_optimized import TJDFTClientOptimized, PerformanceMetrics
 
 __all__ = [
+    # Clients
     "TJDFTClient", 
+    "TJDFTClientOptimized",
+    
+    # Models
     "Acordao", 
     "Decisao", 
     "ResultadoBusca",
+    
+    # Agent
     "JurisprudenciaAgent",
     "AnaliseJurisprudencial",
+    
+    # Analysis
     "AnaliseMagistrados",
     "PerfilMagistrado",
+    
+    # Token counting
+    "TokenCounter",
+    "TokenCount",
+    "count_prompt_tokens",
+    "estimate_openai_cost",
+    
+    # Metrics
+    "PerformanceMetrics",
 ]
