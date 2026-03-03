@@ -20,9 +20,9 @@ def exemplo_analise_caso():
     print("=" * 70)
     
     # Verifica se a chave da API está disponível
-    if not os.environ.get("GEMINI_API_KEY"):
-        print("\n❌ Erro: GEMINI_API_KEY não definida")
-        print("Exporte a variável: export GEMINI_API_KEY='sua-chave'")
+    if not os.environ.get("OPENAI_API_KEY"):
+        print("\n❌ Erro: OPENAI_API_KEY não definida")
+        print("Exporte a variável: export OPENAI_API_KEY='sua-chave'")
         return
     
     # Cria o agente
@@ -91,8 +91,8 @@ def exemplo_resumo_jurisprudencia():
     print("EXEMPLO: Resumo de Jurisprudência Específica")
     print("=" * 70)
     
-    if not os.environ.get("GEMINI_API_KEY"):
-        print("\n❌ GEMINI_API_KEY não definida")
+    if not os.environ.get("OPENAI_API_KEY"):
+        print("\n❌ OPENAI_API_KEY não definida")
         return
     
     agent = JurisprudenciaAgent()

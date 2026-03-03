@@ -7,7 +7,7 @@ modelos de linguagem para análise inteligente de jurisprudência.
 Uso:
     from tjdft.agent import JurisprudenciaAgent
     
-    agent = JurisprudenciaAgent(api_key="sua-chave-gemini")
+    agent = JurisprudenciaAgent(api_key="sua-chave-openai")
     analise = agent.analisar_caso(
         descricao="Cliente não recebeu CNH renovada após 30 dias",
         termos_busca=["DETRAN CNH renovação"]
@@ -37,7 +37,7 @@ class JurisprudenciaAgent:
     """
     Agente de análise de jurisprudência do TJDFT.
     
-    Combina busca na API do TJDFT com análise via IA (Gemini).
+    Combina busca na API do TJDFT com análise via IA (OpenAI).
     
     Example:
         >>> agent = JurisprudenciaAgent()
@@ -51,41 +51,41 @@ class JurisprudenciaAgent:
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model: str = "gemini-2.0-flash",
+        model: str = "gpt-4o-mini",
         tjdft_client: Optional[TJDFTClient] = None
     ):
         """
         Inicializa o agente.
         
         Args:
-            api_key: Chave da API do Gemini (ou via GEMINI_API_KEY)
-            model: Modelo do Gemini a ser usado
+            api_key: Chave da API da OpenAI (ou via OPENAI_API_KEY)
+            model: Modelo da OpenAI a ser usado (default: gpt-4o-mini)
             tjdft_client: Cliente TJDFT customizado (opcional)
         """
-        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
         if not self.api_key:
             raise ValueError(
-                "Chave da API do Gemini não fornecida. "
-                "Defina GEMINI_API_KEY ou passe api_key."
+                "Chave da API da OpenAI não fornecida. "
+                "Defina OPENAI_API_KEY ou passe api_key."
             )
         
         self.model = model
         self.client = tjdft_client or TJDFTClient()
-        self._gemini_client = None
+        self._openai_client = None
     
     @property
-    def gemini_client(self):
-        """Lazy loading do cliente Gemini."""
-        if self._gemini_client is None:
+    def openai_client(self):
+        """Lazy loading do cliente OpenAI."""
+        if self._openai_client is None:
             try:
-                from google import genai
-                self._gemini_client = genai.Client(api_key=self.api_key)
+                from openai import OpenAI
+                self._openai_client = OpenAI(api_key=self.api_key)
             except ImportError:
                 raise ImportError(
-                    "Biblioteca google-genai não instalada. "
-                    "Instale com: pip install google-genai"
+                    "Biblioteca openai não instalada. "
+                    "Instale com: pip install openai"
                 )
-        return self._gemini_client
+        return self._openai_client
     
     def buscar_jurisprudencia(
         self,
@@ -156,7 +156,7 @@ class JurisprudenciaAgent:
             contexto_adicional=contexto_adicional
         )
         
-        # 4. Analisar com Gemini
+        # 4. Analisar com OpenAI
         analise = self._analisar_com_ia(contexto)
         
         # 5. Retornar resultado estruturado
@@ -207,7 +207,7 @@ class JurisprudenciaAgent:
         return contexto
     
     def _analisar_com_ia(self, contexto: str) -> Dict[str, Any]:
-        """Envia contexto para análise pelo Gemini."""
+        """Envia contexto para análise pela OpenAI."""
         prompt = f"""
 Você é um assistente jurídico especialista em direito administrativo e processual civil do TJDFT.
 
@@ -242,35 +242,37 @@ Retorne em formato JSON:
 """
         
         try:
-            response = self.gemini_client.models.generate_content(
+            response = self.openai_client.chat.completions.create(
                 model=self.model,
-                contents=prompt
+                messages=[
+                    {"role": "system", "content": "Você é um assistente jurídico especialista em direito administrativo brasileiro. Sempre retorne respostas em JSON válido."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=2000,
+                response_format={"type": "json_object"}
             )
             
             # Parsear resposta JSON
             import json
-            import re
             
-            texto = response.text
+            texto = response.choices[0].message.content
             
-            # Extrair JSON da resposta
-            json_match = re.search(r'\{[\s\S]*\}', texto)
-            if json_match:
-                return json.loads(json_match.group())
-            
-            # Fallback se não encontrar JSON
-            return {
-                "analise": texto,
-                "relevantes": [],
-                "sugestoes": [],
-                "precedentes": []
-            }
+            try:
+                return json.loads(texto)
+            except json.JSONDecodeError:
+                return {
+                    "analise": texto,
+                    "relevantes": [],
+                    "sugestoes": [],
+                    "precedentes": []
+                }
             
         except Exception as e:
             return {
                 "analise": f"Erro na análise: {str(e)}",
                 "relevantes": [],
-                "sugestoes": ["Verifique a conexão com a API do Gemini"],
+                "sugestoes": ["Verifique a conexão com a API da OpenAI"],
                 "precedentes": []
             }
     
@@ -295,7 +297,11 @@ Retorne em formato JSON:
         
         dec = resultados[0]
         
-        prompt = f"""
+        response = self.openai_client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "Você é um assistente jurídico. Resuma jurisprudências de forma clara e objetiva."},
+                {"role": "user", "content": f"""
 Resuma a seguinte jurisprudência do TJDFT de forma clara e objetiva:
 
 **Processo:** {dec.get('processo', 'N/A')}
@@ -307,13 +313,13 @@ Forneça:
 1. Teses principais
 2. Decisão
 3. Relevância para casos similares
-"""
-        
-        response = self.gemini_client.models.generate_content(
-            model=self.model,
-            contents=prompt
+"""}
+            ],
+            temperature=0.7,
+            max_tokens=1000
         )
-        return response.text
+        
+        return response.choices[0].message.content
     
     def comparar_casos(
         self,
@@ -352,7 +358,11 @@ Forneça:
         for j in todas[:10]:
             contexto += f"- {j.get('processo')}: {j.get('ementa', '')[:200]}...\n"
         
-        prompt = f"""
+        response = self.openai_client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "Você é um assistente jurídico especialista em direito comparado."},
+                {"role": "user", "content": f"""
 {contexto}
 
 Compare os dois casos com base nas jurisprudências encontradas.
@@ -361,10 +371,10 @@ Identifique:
 2. Diferenças
 3. Quais jurisprudências se aplicam a cada caso
 4. Probabilidade de sucesso em cada caso
-"""
-        
-        response = self.gemini_client.models.generate_content(
-            model=self.model,
-            contents=prompt
+"""}
+            ],
+            temperature=0.7,
+            max_tokens=2000
         )
-        return response.text
+        
+        return response.choices[0].message.content

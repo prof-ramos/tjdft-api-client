@@ -64,7 +64,7 @@ resultados = client.pesquisar(
 
 ## 🤖 Agente de Jurisprudência com IA
 
-O pacote inclui um agente que combina a API do TJDFT com o **Google Gemini** para análise inteligente de casos jurídicos.
+O pacote inclui um agente que combina a API do TJDFT com a **OpenAI** para análise inteligente de casos jurídicos.
 
 ### Instalação com suporte a IA
 
@@ -75,10 +75,10 @@ pip install tjdft-api-client[agent]
 ### Configuração
 
 ```bash
-export GEMINI_API_KEY='sua-chave-api'
+export OPENAI_API_KEY='sua-chave-api'
 ```
 
-Obtenha sua chave em: https://aistudio.google.com/app/apikey
+Obtenha sua chave em: https://platform.openai.com/api-keys
 
 ### Uso
 
@@ -116,6 +116,14 @@ print(f"Precedentes: {analise.precedentes}")
 - **Identificação de precedentes** relevantes
 - **Sugestões práticas** para a ação judicial
 - **Resumo de decisões** específicas
+
+### Modelos suportados
+
+Por padrão usa `gpt-4o-mini`. Para usar GPT-4:
+
+```python
+agent = JurisprudenciaAgent(model="gpt-4o")
+```
 
 ### Exemplo completo
 
