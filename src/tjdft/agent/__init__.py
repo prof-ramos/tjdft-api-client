@@ -78,13 +78,12 @@ class JurisprudenciaAgent:
         """Lazy loading do cliente Gemini."""
         if self._gemini_client is None:
             try:
-                import google.generativeai as genai
-                genai.configure(api_key=self.api_key)
-                self._gemini_client = genai.GenerativeModel(self.model)
+                from google import genai
+                self._gemini_client = genai.Client(api_key=self.api_key)
             except ImportError:
                 raise ImportError(
-                    "Biblioteca google-generativeai não instalada. "
-                    "Instale com: pip install google-generativeai"
+                    "Biblioteca google-genai não instalada. "
+                    "Instale com: pip install google-genai"
                 )
         return self._gemini_client
     
@@ -243,7 +242,10 @@ Retorne em formato JSON:
 """
         
         try:
-            response = self.gemini_client.generate_content(prompt)
+            response = self.gemini_client.models.generate_content(
+                model=self.model,
+                contents=prompt
+            )
             
             # Parsear resposta JSON
             import json
@@ -307,7 +309,10 @@ Forneça:
 3. Relevância para casos similares
 """
         
-        response = self.gemini_client.generate_content(prompt)
+        response = self.gemini_client.models.generate_content(
+            model=self.model,
+            contents=prompt
+        )
         return response.text
     
     def comparar_casos(
@@ -358,5 +363,8 @@ Identifique:
 4. Probabilidade de sucesso em cada caso
 """
         
-        response = self.gemini_client.generate_content(prompt)
+        response = self.gemini_client.models.generate_content(
+            model=self.model,
+            contents=prompt
+        )
         return response.text
