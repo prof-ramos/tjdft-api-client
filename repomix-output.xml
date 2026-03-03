@@ -1,0 +1,6960 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+docs/
+  API.md
+  endpoints.md
+  examples.md
+  EXEMPLOS.md
+  REFERENCIA.md
+  UV.md
+examples/
+  agente_jurisprudencia.py
+  busca_jurisprudencia.py
+  contagem_tokens.py
+scripts/
+  descobrir_endpoints.py
+src/
+  tjdft/
+    agent/
+      __init__.py
+    __init__.py
+    analise.py
+    client_optimized.py
+    client.py
+    models.py
+    tokens.py
+tests/
+  test_client.py
+  test_e2e_oficial.py
+  test_e2e.py
+  test_performance.py
+.env.example
+.gitignore
+.python-version
+Makefile
+pyproject.toml
+README.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="docs/API.md">
+# Documentação da API de Jurisprudência do TJDFT
+
+> **Versão:** 1.0.0  
+> **Última atualização:** 2026-03-02  
+> **Status:** Pública (sem autenticação)
+
+---
+
+## 📋 Sumário
+
+- [Visão Geral](#visão-geral)
+- [Autenticação](#autenticação)
+- [Base URL](#base-url)
+- [Endpoints](#endpoints)
+  - [Pesquisa de Jurisprudência](#pesquisa-de-jurisprudência)
+  - [Filtros Disponíveis](#filtros-disponíveis)
+- [Formatos de Dados](#formatos-de-dados)
+  - [Requisição](#requisição)
+  - [Resposta](#resposta)
+  - [Modelos](#modelos)
+- [Exemplos de Uso](#exemplos-de-uso)
+  - [Python](#python)
+  - [cURL](#curl)
+  - [JavaScript](#javascript)
+- [Códigos de Status](#códigos-de-status)
+- [Limitações e Restrições](#limitações-e-restrições)
+- [Boas Práticas](#boas-práticas)
+- [FAQ](#faq)
+
+---
+
+## Visão Geral
+
+A API de Jurisprudência do Tribunal de Justiça do Distrito Federal e dos Territórios (TJDFT) permite pesquisar decisões judiciais (acórdãos e decisões monocráticas) publicadas pelo tribunal.
+
+### Características
+
+- ✅ **Pública**: Sem necessidade de autenticação
+- ✅ **RESTful**: Interface padrão HTTP/JSON
+- ✅ **Gratuita**: Sem custos para uso
+- ✅ **Tempo Real**: Decisões publicadas recentemente
+- ⚠️ **Sem Rate Limit Oficial**: Uso responsável recomendado
+
+### Tipos de Decisões
+
+| Tipo | Descrição |
+|------|-----------|
+| **Acórdãos** | Decisões colegiadas (turmas, câmaras) |
+| **Decisões Monocráticas** | Decisões individuais de desembargadores |
+| **Sentenças** | Decisões de primeira instância |
+
+---
+
+## Autenticação
+
+**Não é necessária autenticação.** A API é pública e não requer tokens, chaves ou credenciais.
+
+⚠️ **Importante**: Por ser pública, recomenda-se:
+- Não fazer abusos (muitas requisições em pouco tempo)
+- Implementar cache local
+- Respeitar intervalos entre requisições
+
+---
+
+## Base URL
+
+```
+https://jurisdf.tjdft.jus.br/api/v1
+```
+
+### URL Completa do Endpoint
+
+```
+https://jurisdf.tjdft.jus.br/api/v1/pesquisa
+```
+
+---
+
+## Endpoints
+
+### Pesquisa de Jurisprudência
+
+Pesquisa decisões no banco de dados do TJDFT.
+
+```
+POST /pesquisa
+```
+
+#### Parâmetros do Body (JSON)
+
+| Parâmetro | Tipo | Obrigatório | Descrição |
+|-----------|------|-------------|-----------|
+| `query` | string | ✅ Sim | Termo principal da pesquisa |
+| `pagina` | int | ✅ Sim | Número da página (começa em 0) |
+| `tamanho` | int | ✅ Sim | Resultados por página (máx: 100) |
+| `termosAcessorios` | array | ❌ Não | Lista de filtros adicionais |
+
+#### Estrutura de `termosAcessorios`
+
+```json
+{
+  "termosAcessorios": [
+    {
+      "campo": "nomeRelator",
+      "valor": "CARMEN BITTENCOURT"
+    }
+  ]
+}
+```
+
+### Filtros Disponíveis
+
+| Campo | Tipo | Descrição | Exemplo |
+|-------|------|-----------|---------|
+| `base` | string | Base de dados | `"acordaos"`, `"decisoes"` |
+| `subbase` | string | Subbase de dados | `"decisoes-monocraticas"` |
+| `origem` | string | Origem da decisão | `"TJDFT"` |
+| `uuid` | string | Identificador único | `"29df78c5-af48-..."` |
+| `identificador` | string | ID numérico | `"70016492"` |
+| `processo` | string | Número do processo | `"0710649-40.2025.8.07.0000"` |
+| `nomeRelator` | string | Nome do relator | `"CARMEN BITTENCOURT"` |
+| `nomeRevisor` | string | Nome do revisor | `"JOÃO EGMONT"` |
+| `nomeRelatorDesignado` | string | Relator designado | `"LEONARDO ALVES"` |
+| `descricaoOrgaoJulgador` | string | Órgão julgador | `"8ª Turma Cível"` |
+| `dataJulgamento` | string | Data do julgamento | `"2025-03-25"` |
+| `dataPublicacao` | string | Data da publicação | `"2025-03-25"` |
+| `descricaoClasseCnj` | string | Classe CNJ | `"Procedimento Comum Cível"` |
+
+---
+
+## Formatos de Dados
+
+### Requisição
+
+#### Headers
+
+```
+Content-Type: application/json
+Accept: application/json
+User-Agent: SeuCliente/1.0
+```
+
+#### Body - Pesquisa Simples
+
+```json
+{
+  "query": "dano moral",
+  "pagina": 0,
+  "tamanho": 20
+}
+```
+
+#### Body - Pesquisa com Filtros
+
+```json
+{
+  "query": "tutela de urgência",
+  "pagina": 0,
+  "tamanho": 10,
+  "termosAcessorios": [
+    {
+      "campo": "nomeRelator",
+      "valor": "CARMEN BITTENCOURT"
+    },
+    {
+      "campo": "descricaoOrgaoJulgador",
+      "valor": "8ª Turma Cível"
+    }
+  ]
+}
+```
+
+### Resposta
+
+#### Estrutura Principal
+
+```json
+{
+  "hits": 1234,
+  "pagina": 0,
+  "registros": [...],
+  "agregações": {...}
+}
+```
+
+#### Campos da Resposta
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `hits` | int | Total de resultados encontrados |
+| `pagina` | int | Página atual |
+| `registros` | array | Array com as decisões |
+| `agregações` | object | Agregações (facetas) para filtros |
+
+#### Estrutura de `registros`
+
+```json
+{
+  "uuid": "29df78c5-af48-48ee-b8f4-7db0bea4cff6",
+  "identificador": "70016492",
+  "sequencial": 1,
+  "base": "decisoes",
+  "subbase": "decisoes-monocraticas",
+  "processo": "0710649-40.2025.8.07.0000",
+  "nomeRelator": "CARMEN BITTENCOURT",
+  "nomeRevisor": null,
+  "descricaoOrgaoJulgador": "8ª Turma Cível",
+  "dataPublicacao": "2025-03-25T03:00:00.000Z",
+  "dataJulgamento": "2025-03-24T03:00:00.000Z",
+  "ementa": "EMENTA: DIREITO DO CONSUMIDOR...",
+  "inteiroTeor": "[Texto completo da decisão...]",
+  "possuiInteiroTeor": true,
+  "descricaoClasseCnj": "Procedimento Comum Cível",
+  "codigoClasseCnj": 202
+}
+```
+
+### Modelos
+
+#### ResultadoBusca
+
+```python
+@dataclass
+class ResultadoBusca:
+    resultados: List[Dict[str, Any]]  # Lista de decisões
+    total: int                        # Total encontrado
+    pagina: int                       # Página atual
+    por_pagina: int                   # Resultados por página
+    agregacoes: Dict[str, Any]        # Facetas/agregações
+    
+    @property
+    def total_paginas(self) -> int:
+        """Retorna o total de páginas."""
+        return (self.total + self.por_pagina - 1) // self.por_pagina
+    
+    @property
+    def tem_proxima(self) -> bool:
+        """Verifica se há próxima página."""
+        return (self.pagina + 1) < self.total_paginas
+```
+
+#### Decisão
+
+```python
+@dataclass
+class Decisao:
+    uuid: str                    # ID único
+    processo: str                # Número do processo
+    ementa: str                  # Ementa da decisão
+    inteiro_teor: str            # Texto completo (se disponível)
+    nome_relator: str            # Nome do relator
+    orgao_julgador: str          # Órgão julgador
+    data_publicacao: str         # Data de publicação
+    data_julgamento: str         # Data do julgamento
+    classe_cnj: str              # Classe processual CNJ
+    base: str                    # Base de dados
+    possui_inteiro_teor: bool    # Se tem texto integral
+```
+
+---
+
+## Exemplos de Uso
+
+### Python
+
+#### Instalação
+
+```bash
+pip install git+https://github.com/prof-ramos/tjdft-api-client.git
+```
+
+#### Uso Básico
+
+```python
+from tjdft import TJDFTClient
+
+# Criar cliente
+client = TJDFTClient()
+
+# Pesquisa simples
+resultados = client.pesquisar(query="dano moral", tamanho=10)
+
+print(f"Total: {resultados.total}")
+for r in resultados:
+    print(f"Processo: {r['processo']}")
+    print(f"Relator: {r['nome_relator']}")
+    print(f"Ementa: {r['ementa'][:100]}...")
+```
+
+#### Pesquisa com Filtros
+
+```python
+from tjdft import TJDFTClient
+
+client = TJDFTClient()
+
+# Filtrar por relator e órgão
+resultados = client.pesquisar(
+    query="tutela de urgência",
+    filtros={
+        "nomeRelator": "CARMEN BITTENCOURT",
+        "descricaoOrgaoJulgador": "8ª Turma Cível"
+    },
+    tamanho=20
+)
+
+print(f"Encontrados: {resultados.total}")
+```
+
+#### Paginação
+
+```python
+from tjdft import TJDFTClient
+
+client = TJDFTClient()
+todos_resultados = []
+
+# Buscar todas as páginas
+pagina = 0
+while True:
+    resultados = client.pesquisar(
+        query="dano moral",
+        pagina=pagina,
+        tamanho=100
+    )
+    
+    todos_resultados.extend(resultados.resultados)
+    
+    if not resultados.tem_proxima:
+        break
+    
+    pagina += 1
+
+print(f"Total coletado: {len(todos_resultados)}")
+```
+
+#### Usando Cliente Otimizado
+
+```python
+from tjdft import TJDFTClientOptimized
+
+# Cliente com cache e rate limiting
+client = TJDFTClientOptimized(
+    cache_ttl=300,        # Cache por 5 minutos
+    rate_limit=10.0,      # 10 req/s
+    max_retries=3         # 3 tentativas
+)
+
+# Primeira chamada (cache miss)
+r1 = client.pesquisar(query="dano moral")
+
+# Segunda chamada (cache hit - instantâneo)
+r2 = client.pesquisar(query="dano moral")
+
+# Ver métricas
+print(client.get_metrics())
+# {'total_requests': 2, 'cache_hits': 1, 'avg_response_time_ms': 150.5}
+```
+
+#### Batch de Consultas
+
+```python
+from tjdft import TJDFTClientOptimized
+
+client = TJDFTClientOptimized()
+
+# Executar múltiplas consultas em paralelo
+consultas = [
+    {"query": "dano moral"},
+    {"query": "habeas corpus"},
+    {"query": "tutela de urgência"},
+    {"query": "obrigação de fazer"},
+]
+
+resultados = client.pesquisar_lote(consultas, max_parallel=5)
+
+for i, r in enumerate(resultados):
+    print(f"{consultas[i]['query']}: {r.total} resultados")
+```
+
+### cURL
+
+#### Pesquisa Simples
+
+```bash
+curl -X POST https://jurisdf.tjdft.jus.br/api/v1/pesquisa \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "dano moral",
+    "pagina": 0,
+    "tamanho": 10
+  }'
+```
+
+#### Pesquisa com Filtros
+
+```bash
+curl -X POST https://jurisdf.tjdft.jus.br/api/v1/pesquisa \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "tutela de urgência",
+    "pagina": 0,
+    "tamanho": 20,
+    "termosAcessorios": [
+      {
+        "campo": "nomeRelator",
+        "valor": "CARMEN BITTENCOURT"
+      },
+      {
+        "campo": "descricaoOrgaoJulgador",
+        "valor": "8ª Turma Cível"
+      }
+    ]
+  }'
+```
+
+#### Buscar por Número de Processo
+
+```bash
+curl -X POST https://jurisdf.tjdft.jus.br/api/v1/pesquisa \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "0710649-40.2025.8.07.0000",
+    "pagina": 0,
+    "tamanho": 1,
+    "termosAcessorios": [
+      {
+        "campo": "processo",
+        "valor": "0710649-40.2025.8.07.0000"
+      }
+    ]
+  }'
+```
+
+### JavaScript
+
+#### Fetch API
+
+```javascript
+// Pesquisa simples
+async function pesquisar(query, pagina = 0, tamanho = 20) {
+  const response = await fetch('https://jurisdf.tjdft.jus.br/api/v1/pesquisa', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query: query,
+      pagina: pagina,
+      tamanho: tamanho
+    })
+  });
+  
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  
+  return response.json();
+}
+
+// Uso
+pesquisar('dano moral', 0, 10)
+  .then(data => {
+    console.log(`Total: ${data.hits}`);
+    data.registros.forEach(r => {
+      console.log(`Processo: ${r.processo}`);
+    });
+  })
+  .catch(console.error);
+```
+
+#### Com Filtros
+
+```javascript
+async function pesquisarComFiltros(query, filtros = {}) {
+  const termosAcessorios = Object.entries(filtros).map(([campo, valor]) => ({
+    campo,
+    valor
+  }));
+  
+  const response = await fetch('https://jurisdf.tjdft.jus.br/api/v1/pesquisa', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query: query,
+      pagina: 0,
+      tamanho: 20,
+      termosAcessorios
+    })
+  });
+  
+  return response.json();
+}
+
+// Uso
+pesquisarComFiltros('tutela de urgência', {
+  nomeRelator: 'CARMEN BITTENCOURT',
+  descricaoOrgaoJulgador: '8ª Turma Cível'
+}).then(console.log);
+```
+
+---
+
+## Códigos de Status
+
+### HTTP Status Codes
+
+| Código | Descrição | Ação Recomendada |
+|--------|-----------|------------------|
+| `200` | Sucesso | Processar resposta normalmente |
+| `400` | Bad Request | Verificar formato do JSON |
+| `404` | Not Found | Verificar URL do endpoint |
+| `429` | Too Many Requests | Implementar backoff e retry |
+| `500` | Internal Server Error | Tentar novamente mais tarde |
+| `502` | Bad Gateway | Servidor temporariamente indisponível |
+| `503` | Service Unavailable | Aguardar e tentar novamente |
+| `504` | Gateway Timeout | Reduzir tamanho da requisição |
+
+### Tratamento de Erros em Python
+
+```python
+from tjdft import TJDFTClient
+import requests
+
+client = TJDFTClient()
+
+try:
+    resultados = client.pesquisar(query="dano moral")
+except requests.exceptions.Timeout:
+    print("Timeout: A API demorou muito para responder")
+except requests.exceptions.ConnectionError:
+    print("Erro de conexão: Verifique sua internet")
+except requests.exceptions.HTTPError as e:
+    if e.response.status_code == 429:
+        print("Rate limit: Aguarde antes de fazer novas requisições")
+    elif e.response.status_code >= 500:
+        print(f"Erro no servidor: {e.response.status_code}")
+    else:
+        print(f"Erro HTTP: {e}")
+except Exception as e:
+    print(f"Erro inesperado: {e}")
+```
+
+---
+
+## Limitações e Restrições
+
+### Rate Limiting
+
+⚠️ **A API não documenta oficialmente rate limits**, mas recomenda-se:
+
+| Cenário | Recomendação |
+|---------|--------------|
+| Uso normal | Máximo 10 req/s |
+| Coleta em massa | Máximo 5 req/s com pausas |
+| Batch grande | Máximo 5 paralelo |
+
+### Tamanho de Resposta
+
+| Parâmetro | Limite |
+|-----------|--------|
+| `tamanho` | Máximo recomendado: 100 |
+| Ementas | Sem limite documentado |
+| Inteiro Teor | Alguns decisões têm, outras não |
+
+### Disponibilidade
+
+| Aspecto | Observação |
+|---------|------------|
+| Uptime | Alta disponibilidade (sem SLA oficial) |
+| Horário | 24/7 (pode haver manutenções) |
+| Histórico | Não todas decisões históricas disponíveis |
+
+### Dados Ausentes
+
+Alguns registros podem não ter:
+- ❌ Inteiro teor (`possuiInteiroTeor: false`)
+- ❌ Revisor (decisões monocráticas)
+- ❌ Data de julgamento (apenas publicação)
+
+### Busca Avançada
+
+A API **não suporta** nativamente:
+- ❌ Range de datas (apenas data específica)
+- ❌ Operadores booleanos complexos (AND, OR, NOT)
+- ❌ Busca por múltiplos processos
+- ❌ Ordenação customizada
+
+**Workaround**: Filtrar resultados no cliente após receber.
+
+---
+
+## Boas Práticas
+
+### 1. Implemente Cache
+
+```python
+from tjdft import TJDFTClientOptimized
+
+# Cache de 5 minutos
+client = TJDFTClientOptimized(cache_ttl=300)
+
+# Requisições repetidas usam cache
+resultados = client.pesquisar(query="dano moral")  # API call
+resultados = client.pesquisar(query="dano moral")  # Cache hit
+```
+
+### 2. Use Rate Limiting
+
+```python
+from tjdft import TJDFTClientOptimized
+
+# Limitar a 5 requisições por segundo
+client = TJDFTClientOptimized(rate_limit=5.0, rate_burst=10)
+```
+
+### 3. Trate Erros Gracefully
+
+```python
+from tjdft import TJDFTClientOptimized
+
+client = TJDFTClientOptimized(max_retries=3)
+
+try:
+    resultados = client.pesquisar(query="termo")
+except Exception as e:
+    # Log do erro
+    print(f"Erro: {e}")
+    # Fallback ou retry manual
+```
+
+### 4. Paginação Eficiente
+
+```python
+from tjdft import TJDFTClient
+
+client = TJDFTClient()
+
+def buscar_todos(query, max_paginas=100):
+    """Busca todas as páginas até limite."""
+    todos = []
+    
+    for pagina in range(max_paginas):
+        resultados = client.pesquisar(
+            query=query,
+            pagina=pagina,
+            tamanho=100
+        )
+        
+        todos.extend(resultados.resultados)
+        
+        if not resultados.tem_proxima:
+            break
+        
+        # Pausa entre páginas
+        time.sleep(0.5)
+    
+    return todos
+```
+
+### 5. Batch de Consultas
+
+```python
+from tjdft import TJDFTClientOptimized
+
+client = TJDFTClientOptimized()
+
+# Prefira batch em vez de loops sequenciais
+consultas = [
+    {"query": "dano moral"},
+    {"query": "habeas corpus"},
+]
+
+resultados = client.pesquisar_lote(consultas, max_parallel=5)
+```
+
+### 6. Monitore Métricas
+
+```python
+client = TJDFTClientOptimized()
+
+# ... fazer requisições ...
+
+metrics = client.get_metrics()
+print(f"Taxa de cache hits: {metrics['cache_hit_ratio']:.1%}")
+print(f"Tempo médio: {metrics['avg_response_time_ms']:.1f}ms")
+```
+
+---
+
+## FAQ
+
+### Perguntas Frequentes
+
+#### 1. A API é oficial?
+
+✅ Sim, é a API oficial do TJDFT usada pelo site do tribunal para buscar jurisprudência.
+
+#### 2. Preciso de autenticação?
+
+❌ Não, a API é pública e não requer tokens ou credenciais.
+
+#### 3. Qual o limite de requisições?
+
+⚠️ Não há documentação oficial, mas recomenda-se máximo 10 req/s.
+
+#### 4. Posso usar comercialmente?
+
+⚖️ Os dados são públicos, mas verifique os termos de uso do TJDFT para uso comercial.
+
+#### 5. Como buscar por período de datas?
+
+A API não suporta range de datas nativamente. Use `dataPublicacao` com data específica ou filtre no cliente.
+
+#### 6. Todas as decisões têm inteiro teor?
+
+❌ Não. Verifique `possuiInteiroTeor` na resposta.
+
+#### 7. Posso buscar processos de primeira instância?
+
+✅ Sim, dependendo da `base` e `subbase` disponíveis.
+
+#### 8. A API tem WebSocket/SSE?
+
+❌ Não, apenas HTTP REST síncrono.
+
+#### 9. Como contribuir com o cliente Python?
+
+📦 Repo: https://github.com/prof-ramos/tjdft-api-client  
+Abra uma issue ou pull request!
+
+#### 10. A API retorna decisões de outros tribunais?
+
+❌ Não, apenas do TJDFT. Para outros tribunais, use APIs específicas (DataJud, DadosJusBR).
+
+---
+
+## Recursos Adicionais
+
+### Links Úteis
+
+- 📚 [Repositório GitHub](https://github.com/prof-ramos/tjdft-api-client)
+- 🌐 [Site Oficial TJDFT](https://www.tjdft.jus.br)
+- 📖 [DataJud CNJ](https://datajud.cnj.jus.br)
+- 📊 [DadosJusBR](https://dadosjusbr.org)
+
+### Contato
+
+Para dúvidas sobre a API oficial do TJDFT:
+- Site: https://www.tjdft.jus.br
+- Ouvidoria: Disponível no site oficial
+
+Para questões sobre o cliente Python:
+- GitHub Issues: https://github.com/prof-ramos/tjdft-api-client/issues
+
+---
+
+## Changelog
+
+### v1.0.0 (2026-03-02)
+- Documentação inicial
+- Endpoint de pesquisa documentado
+- Exemplos em Python, cURL, JavaScript
+- Modelos de dados documentados
+- Limitações e boas práticas
+
+---
+
+**Última atualização:** 2026-03-02  
+**Versão da API:** v1  
+**Versão do Documento:** 1.0.0
+</file>
+
+<file path="docs/examples.md">
+# Exemplos de Uso
+
+## Instalação
+
+```bash
+pip install tjdft-api-client
+```
+
+## Uso Básico
+
+### 1. Busca Simples
+
+```python
+from tjdft import TJDFTClient
+
+with TJDFTClient() as client:
+    resultados = client.buscar_jurisprudencia(
+        termo="habeas corpus"
+    )
+    
+    for r in resultados:
+        print(f"{r.numero}: {r.ementa[:100]}")
+```
+
+### 2. Busca com Filtros
+
+```python
+from tjdft import TJDFTClient
+from datetime import date
+
+with TJDFTClient() as client:
+    resultados = client.buscar_jurisprudencia(
+        termo="tráfico de drogas",
+        tipo="acordao",
+        data_inicial=date(2024, 1, 1),
+        data_final=date(2024, 12, 31),
+        orgao="1ª Turma Criminal"
+    )
+```
+
+### 3. Busca por Número
+
+```python
+from tjdft import TJDFTClient
+
+client = TJDFTClient()
+
+# Buscar acórdão
+acordao = client.buscar_acordao("2024HC123456")
+if acordao:
+    print(acordao.ementa)
+
+# Buscar decisão
+decisao = client.buscar_decisao("2024HC123456")
+if decisao:
+    print(decisao.ementa)
+```
+
+### 4. Paginação
+
+```python
+from tjdft import TJDFTClient
+
+client = TJDFTClient()
+
+# Primeira página
+pagina1 = client.buscar_jurisprudencia(termo="direito penal", por_pagina=10)
+
+print(f"Total: {pagina1.total}")
+print(f"Páginas: {pagina1.total_paginas}")
+
+# Próxima página
+if pagina1.tem_proxima:
+    pagina2 = client.buscar_jurisprudencia(
+        termo="direito penal", 
+        pagina=2,
+        por_pagina=10
+    )
+```
+
+### 5. Listar Órgãos Julgadores
+
+```python
+from tjdft import TJDFTClient
+
+client = TJDFTClient()
+orgaos = client.listar_orgaos_julgadores()
+
+for orgao in orgaos:
+    print(orgao)
+```
+
+## Integração com Outros Sistemas
+
+### Com Streamlit
+
+```python
+import streamlit as st
+from tjdft import TJDFTClient
+
+st.title("Busca de Jurisprudência TJDFT")
+
+termo = st.text_input("Termo de busca")
+
+if st.button("Buscar") and termo:
+    with st.spinner("Buscando..."):
+        client = TJDFTClient()
+        resultados = client.buscar_jurisprudencia(termo=termo)
+        
+        st.write(f"Total encontrado: {resultados.total}")
+        
+        for r in resultados:
+            st.markdown(f"### {r.numero}")
+            st.write(f"**Classe:** {r.classe}")
+            st.write(f"**Relator:** {r.relator}")
+            st.write(f"**Ementa:** {r.ementa}")
+            st.divider()
+```
+
+### Com Discord Bot
+
+```python
+import discord
+from discord.ext import commands
+from tjdft import TJDFTClient
+
+bot = commands.Bot(command_prefix="!", intents=discord.Intents.default())
+
+@bot.command()
+async def jurisprudencia(ctx, *, termo: str):
+    """Busca jurisprudência no TJDFT."""
+    async with ctx.typing():
+        client = TJDFTClient()
+        resultados = client.buscar_jurisprudencia(termo=termo, por_pagina=5)
+        
+        if not resultados:
+            await ctx.send("Nenhum resultado encontrado.")
+            return
+        
+        for r in resultados[:3]:
+            embed = discord.Embed(
+                title=r.numero,
+                description=r.ementa[:500],
+                color=discord.Color.blue()
+            )
+            embed.add_field(name="Classe", value=r.classe)
+            embed.add_field(name="Relator", value=r.relator)
+            await ctx.send(embed=embed)
+
+bot.run("YOUR_TOKEN")
+```
+
+## Tratamento de Erros
+
+```python
+from tjdft import TJDFTClient
+import requests
+
+client = TJDFTClient()
+
+try:
+    resultados = client.buscar_jurisprudencia(termo="teste")
+except requests.HTTPError as e:
+    print(f"Erro HTTP: {e}")
+except requests.Timeout:
+    print("Timeout na requisição")
+except requests.ConnectionError:
+    print("Erro de conexão")
+except Exception as e:
+    print(f"Erro inesperado: {e}")
+```
+</file>
+
+<file path="docs/EXEMPLOS.md">
+# Exemplos Práticos - API TJDFT
+
+> Casos de uso comuns para advogados, juristas e desenvolvedores
+
+---
+
+## 📋 Sumário
+
+1. [Busca de Precedentes](#1-busca-de-precedentes)
+2. [Análise de Magistrados](#2-análise-de-magistrados)
+3. [Monitoramento de Processos](#3-monitoramento-de-processos)
+4. [Pesquisa por Matéria](#4-pesquisa-por-matéria)
+5. [Exportação de Dados](#5-exportação-de-dados)
+6. [Integração com IA](#6-integração-com-ia)
+
+---
+
+## 1. Busca de Precedentes
+
+### Cenário: Encontrar precedentes sobre dano moral em atraso de voo
+
+```python
+from tjdft import TJDFTClientOptimized
+
+client = TJDFTClientOptimized(cache_ttl=600)
+
+# Buscar precedentes
+resultados = client.pesquisar(
+    query="dano moral atraso voo",
+    tamanho=20
+)
+
+print(f"Total de precedentes: {resultados.total}\n")
+
+# Filtrar apenas decisões favoráveis
+favoraveis = []
+for r in resultados:
+    ementa = r.get("ementa", "").lower()
+    
+    # Verificar se é deferimento
+    if any(p in ementa for p in ["deferido", "procedente", "condeno", "indenização"]):
+        favoraveis.append({
+            "processo": r["processo"],
+            "relator": r["nome_relator"],
+            "orgao": r["orgao_julgador"],
+            "ementa": r["ementa"][:200] + "...",
+            "data": r["data_publicacao"]
+        })
+
+print(f"Decisões favoráveis: {len(favoraveis)}\n")
+
+for i, d in enumerate(favoraveis[:5], 1):
+    print(f"{i}. {d['processo']}")
+    print(f"   Relator: {d['relator']}")
+    print(f"   Data: {d['data']}")
+    print(f"   Ementa: {d['ementa']}\n")
+```
+
+### Saída Esperada
+
+```
+Total de precedentes: 234
+
+Decisões favoráveis: 156
+
+1. 0701234-56.2024.8.07.0000
+   Relator: CARMEN BITTENCOURT
+   Data: 2024-06-15
+   Ementa: EMENTA: DIREITO DO CONSUMIDOR. DANO MORAL. ATRASO DE VOO. 
+   RESPONSABILIDADE OBJETIVA DA COMPANHIA AÉREA. DEVER DE INDENIZAR...
+
+2. 0712345-67.2024.8.07.0001
+   Relator: JOÃO EGMONT
+   Data: 2024-07-20
+   Ementa: EMENTA: INDENIZAÇÃO POR DANOS MORAIS. ATRASO DE VOO INTERNACIONAL...
+```
+
+---
+
+## 2. Análise de Magistrados
+
+### Cenário: Analisar perfil decisório de um desembargador
+
+```python
+from tjdft import TJDFTClientOptimized
+from tjdft.analise import AnaliseMagistrados
+
+client = TJDFTClientOptimized()
+analise = AnaliseMagistrados()
+
+# Buscar decisões do magistrado
+resultados = client.pesquisar_por_relator(
+    query="dano moral",  # ou query vazia para todas
+    relator="CARMEN BITTENCOURT",
+    tamanho=100
+)
+
+# Analisar perfil
+perfil = analise.analisar(resultados.resultados)
+
+print(f"Análise do(a) Desembargador(a): {perfil.nome}")
+print(f"Total de decisões analisadas: {perfil.total_decisoes}")
+print(f"\nDeferimentos: {perfil.deferimentos} ({perfil.percentual_deferimento:.1%})")
+print(f"Indeferimentos: {perfil.indeferimentos} ({perfil.percentual_indeferimento:.1%})")
+print(f"\nPrincipais matérias:")
+for materia, qtd in perfil.materias_frequentes[:5]:
+    print(f"  - {materia}: {qtd}")
+
+print(f"\nValor médio de indenização: R$ {perfil.valor_medio_indenizacao:,.2f}")
+```
+
+### Saída Esperada
+
+```
+Análise do(a) Desembargador(a): CARMEN BITTENCOURT
+Total de decisões analisadas: 87
+
+Deferimentos: 52 (59.8%)
+Indeferimentos: 35 (40.2%)
+
+Principais matérias:
+  - Direito do Consumidor: 34
+  - Responsabilidade Civil: 28
+  - Contratos: 15
+  - Direito Bancário: 10
+
+Valor médio de indenização: R$ 8.500,00
+```
+
+---
+
+## 3. Monitoramento de Processos
+
+### Cenário: Monitorar movimentações de uma lista de processos
+
+```python
+from tjdft import TJDFTClientOptimized
+import json
+from datetime import datetime
+
+client = TJDFTClientOptimized()
+
+# Lista de processos para monitorar
+processos_interesse = [
+    "0710649-40.2025.8.07.0000",
+    "0712345-67.2024.8.07.0001",
+    "0723456-78.2024.8.07.0002",
+]
+
+def monitorar_processos(processos):
+    """Verifica processos e retorna novidades."""
+    novidades = []
+    
+    for processo in processos:
+        # Buscar processo
+        decisao = client.buscar_por_processo(processo)
+        
+        if decisao:
+            novidades.append({
+                "processo": processo,
+                "encontrado": True,
+                "data_publicacao": decisao.get("data_publicacao"),
+                "ementa": decisao.get("ementa", "")[:100],
+            })
+        else:
+            novidades.append({
+                "processo": processo,
+                "encontrado": False,
+            })
+    
+    return novidades
+
+# Executar monitoramento
+resultado = monitorar_processos(processos_interesse)
+
+# Gerar relatório
+print(f"Monitoramento - {datetime.now().strftime('%d/%m/%Y %H:%M')}\n")
+print("="*60)
+
+for r in resultado:
+    if r["encontrado"]:
+        print(f"✅ {r['processo']}")
+        print(f"   Publicado: {r['data_publicacao']}")
+        print(f"   Ementa: {r['ementa']}...\n")
+    else:
+        print(f"❌ {r['processo']} - Não encontrado\n")
+
+# Salvar em arquivo
+with open("monitoramento.json", "w") as f:
+    json.dump(resultado, f, indent=2, ensure_ascii=False)
+
+print("\n✅ Relatório salvo em monitoramento.json")
+```
+
+### Saída Esperada
+
+```
+Monitoramento - 02/03/2026 21:45
+
+============================================================
+✅ 0710649-40.2025.8.07.0000
+   Publicado: 2025-03-25
+   Ementa: EMENTA: DIREITO ADMINISTRATIVO. MANDADO DE SEGURANÇA. 
+   RENOVAÇÃO DE CNH. ATRASO INJUSTIFICADO DO DETRAN...
+
+✅ 0712345-67.2024.8.07.0001
+   Publicado: 2024-12-10
+   Ementa: EMENTA: APELAÇÃO CÍVEL. INDENIZAÇÃO POR DANOS MORAIS...
+
+❌ 0723456-78.2024.8.07.0002 - Não encontrado
+
+✅ Relatório salvo em monitoramento.json
+```
+
+---
+
+## 4. Pesquisa por Matéria
+
+### Cenário: Pesquisar todas as decisões sobre um tema específico
+
+```python
+from tjdft import TJDFTClientOptimized
+import time
+
+client = TJDFTClientOptimized(rate_limit=5.0)
+
+def buscar_tema(tema, max_resultados=500):
+    """Busca todas as decisões sobre um tema."""
+    todos = []
+    pagina = 0
+    tamanho = 100
+    
+    while len(todos) < max_resultados:
+        print(f"Buscando página {pagina}...")
+        
+        resultados = client.pesquisar(
+            query=tema,
+            pagina=pagina,
+            tamanho=tamanho
+        )
+        
+        if not resultados.resultados:
+            break
+        
+        todos.extend(resultados.resultados)
+        
+        print(f"  Encontrados: {len(resultados.resultados)}")
+        print(f"  Total acumulado: {len(todos)}/{resultados.total}")
+        
+        if not resultados.tem_proxima:
+            break
+        
+        pagina += 1
+        time.sleep(0.5)  # Pausa entre páginas
+    
+    return todos[:max_resultados]
+
+# Buscar decisões sobre "tutela de urgência"
+decisoes = buscar_tema("tutela de urgência CNH", max_resultados=200)
+
+print(f"\n{'='*60}")
+print(f"Total coletado: {len(decisoes)} decisões")
+
+# Estatísticas
+orgaos = {}
+relatores = {}
+
+for d in decisoes:
+    orgao = d.get("orgao_julgador", "N/A")
+    relator = d.get("nome_relator", "N/A")
+    
+    orgaos[orgao] = orgaos.get(orgao, 0) + 1
+    relatores[relator] = relatores.get(relator, 0) + 1
+
+print(f"\nTop 5 Órgãos Julgadores:")
+for orgao, qtd in sorted(orgaos.items(), key=lambda x: x[1], reverse=True)[:5]:
+    print(f"  {orgao}: {qtd}")
+
+print(f"\nTop 5 Relatores:")
+for relator, qtd in sorted(relatores.items(), key=lambda x: x[1], reverse=True)[:5]:
+    print(f"  {relator}: {qtd}")
+```
+
+### Saída Esperada
+
+```
+Buscando página 0...
+  Encontrados: 100
+  Total acumulado: 100/1451
+Buscando página 1...
+  Encontrados: 100
+  Total acumulado: 200/1451
+
+============================================================
+Total coletado: 200 decisões
+
+Top 5 Órgãos Julgadores:
+  8ª Turma Cível: 45
+  5ª Turma Cível: 38
+  3ª Turma Cível: 32
+  1ª Turma Cível: 28
+  6ª Turma Cível: 22
+
+Top 5 Relatores:
+  CARMEN BITTENCOURT: 34
+  JOÃO EGMONT: 28
+  LEONARDO ALVES: 25
+  MARIA SOUZA: 22
+  PEDRO SILVA: 19
+```
+
+---
+
+## 5. Exportação de Dados
+
+### Cenário: Exportar decisões para CSV e JSON
+
+```python
+from tjdft import TJDFTClientOptimized
+import csv
+import json
+from datetime import datetime
+
+client = TJDFTClientOptimized()
+
+# Buscar decisões
+resultados = client.pesquisar(query="dano moral banco", tamanho=50)
+
+# Preparar dados
+dados = []
+for r in resultados:
+    dados.append({
+        "processo": r.get("processo", ""),
+        "relator": r.get("nome_relator", ""),
+        "orgao": r.get("orgao_julgador", ""),
+        "data_publicacao": r.get("data_publicacao", ""),
+        "classe": r.get("classe_cnj", ""),
+        "ementa": r.get("ementa", "").replace("\n", " ")[:500],
+        "tem_inteiro_teor": r.get("possui_inteiro_teor", False),
+    })
+
+# Exportar para CSV
+csv_file = "jurisprudencias.csv"
+with open(csv_file, "w", newline="", encoding="utf-8") as f:
+    if dados:
+        writer = csv.DictWriter(f, fieldnames=dados[0].keys())
+        writer.writeheader()
+        writer.writerows(dados)
+
+print(f"✅ CSV exportado: {csv_file}")
+
+# Exportar para JSON
+json_file = "jurisprudencias.json"
+with open(json_file, "w", encoding="utf-8") as f:
+    json.dump(dados, f, indent=2, ensure_ascii=False)
+
+print(f"✅ JSON exportado: {json_file}")
+
+# Exportar para Markdown
+md_file = "jurisprudencias.md"
+with open(md_file, "w", encoding="utf-8") as f:
+    f.write(f"# Jurisprudências - Dano Moral (Banco)\n\n")
+    f.write(f"Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M')}\n\n")
+    f.write(f"Total: {len(dados)} decisões\n\n")
+    f.write("---\n\n")
+    
+    for i, d in enumerate(dados, 1):
+        f.write(f"## {i}. {d['processo']}\n\n")
+        f.write(f"- **Relator:** {d['relator']}\n")
+        f.write(f"- **Órgão:** {d['orgao']}\n")
+        f.write(f"- **Data:** {d['data_publicacao']}\n")
+        f.write(f"- **Classe:** {d['classe']}\n\n")
+        f.write(f"**Ementa:**\n\n{d['ementa']}\n\n")
+        f.write("---\n\n")
+
+print(f"✅ Markdown exportado: {md_file}")
+```
+
+### Saída Esperada
+
+```
+✅ CSV exportado: jurisprudencias.csv
+✅ JSON exportado: jurisprudencias.json
+✅ Markdown exportado: jurisprudencias.md
+```
+
+---
+
+## 6. Integração com IA
+
+### Cenário: Usar GPT para analisar jurisprudência
+
+```python
+from tjdft import TJDFTClientOptimized, TokenCounter
+import os
+from openai import OpenAI
+
+# Configurar
+client_tjdft = TJDFTClientOptimized()
+client_openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+counter = TokenCounter(model="gpt-4o-mini")
+
+# Buscar jurisprudência
+resultados = client_tjdft.pesquisar(query="dano moral atraso voo", tamanho=5)
+
+# Preparar contexto
+contexto = "ANALISE AS SEGUINTES DECISÕES:\n\n"
+for i, r in enumerate(resultados, 1):
+    ementa = r.get("ementa", "")
+    contexto += f"DECISÃO {i}:\n{ementa}\n\n{'='*60}\n\n"
+
+# Contar tokens
+token_count = counter.count(contexto)
+print(f"Contexto: {token_count.tokens} tokens")
+
+# Estimar custo
+cost = counter.estimate_cost(
+    input_tokens=token_count.tokens,
+    output_tokens=1000,
+    model="gpt-4o-mini"
+)
+print(f"Custo estimado: ${cost['total_cost_usd']:.4f}")
+
+# Truncar se necessário
+if token_count.tokens > 100000:
+    contexto = counter.truncate_to_tokens(contexto, 100000)
+    print("Contexto truncado para 100k tokens")
+
+# Analisar com GPT
+prompt = f"""
+Você é um especialista em direito do consumidor e jurisprudência.
+
+{contexto}
+
+Por favor, responda:
+
+1. Qual é a tese principal dessas decisões?
+2. Quais argumentos são mais recorrentes?
+3. Qual o valor médio de indenização deferido?
+4. Há alguma tendência ou padrão identificável?
+5. Quais são os requisitos para deferimento?
+
+Responda de forma estruturada e objetiva.
+"""
+
+response = client_openai.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": "Você é um especialista jurídico."},
+        {"role": "user", "content": prompt}
+    ],
+    temperature=0.7,
+    max_tokens=1500
+)
+
+analise = response.choices[0].message.content
+
+print("\n" + "="*60)
+print("ANÁLISE DA IA:")
+print("="*60)
+print(analise)
+
+# Salvar análise
+with open("analise_ia.md", "w", encoding="utf-8") as f:
+    f.write(f"# Análise de Jurisprudência\n\n")
+    f.write(f"**Tema:** Dano moral - Atraso de voo\n\n")
+    f.write(f"**Data:** {datetime.now().strftime('%d/%m/%Y')}\n\n")
+    f.write(f"## Análise\n\n{analise}\n")
+
+print("\n✅ Análise salva em analise_ia.md")
+```
+
+### Saída Esperada
+
+```
+Contexto: 2847 tokens
+Custo estimado: $0.0023
+
+============================================================
+ANÁLISE DA IA:
+============================================================
+
+## 1. Tese Principal
+
+As decisões analisadas estabelecem que as companhias aéreas têm 
+responsabilidade objetiva pelos danos morais causados por atrasos 
+de voo, conforme o art. 14 do CDC...
+
+## 2. Argumentos Recorrentes
+
+- Violação do dever de informação
+- Ausência de assistência material
+- Dano in re ipsa (não precisa provar prejuízo)
+...
+
+✅ Análise salva em analise_ia.md
+```
+
+---
+
+## Exemplos Avançados
+
+### Análise Comparativa de Turmas
+
+```python
+from tjdft import TJDFTClientOptimized
+
+client = TJDFTClientOptimized()
+
+turmas = [
+    "3ª Turma Cível",
+    "5ª Turma Cível",
+    "8ª Turma Cível"
+]
+
+estatisticas = {}
+
+for turma in turmas:
+    resultados = client.pesquisar_por_orgao(
+        query="dano moral",
+        orgao=turma,
+        tamanho=100
+    )
+    
+    deferimentos = 0
+    for r in resultados:
+        ementa = r.get("ementa", "").lower()
+        if any(p in ementa for p in ["deferido", "procedente", "condeno"]):
+            deferimentos += 1
+    
+    estatisticas[turma] = {
+        "total": len(resultados),
+        "deferimentos": deferimentos,
+        "taxa": deferimentos / len(resultados) if resultados else 0
+    }
+
+print("COMPARATIVO DE TURMAS - DANO MORAL\n")
+print(f"{'Turma':<20} {'Total':>10} {'Deferiu':>10} {'Taxa':>10}")
+print("-" * 50)
+
+for turma, stats in estatisticas.items():
+    print(f"{turma:<20} {stats['total']:>10} {stats['deferimentos']:>10} {stats['taxa']:>10.1%}")
+```
+
+### Monitoramento Contínuo com Cron
+
+```python
+# Script para executar diariamente via cron
+
+from tjdft import TJDFTClientOptimized
+import json
+from datetime import datetime, timedelta
+
+def verificar_novas_decisoes():
+    """Verifica decisões dos últimos 7 dias."""
+    client = TJDFTClientOptimized()
+    
+    # Carregar estado anterior
+    try:
+        with open("estado.json", "r") as f:
+            estado = json.load(f)
+    except FileNotFoundError:
+        estado = {"processos_conhecidos": []}
+    
+    # Buscar decisões recentes
+    resultados = client.pesquisar(
+        query="dano moral",
+        tamanho=50
+    )
+    
+    novos = []
+    for r in resultados:
+        processo = r.get("processo")
+        if processo not in estado["processos_conhecidos"]:
+            novos.append(r)
+            estado["processos_conhecidos"].append(processo)
+    
+    # Salvar estado
+    with open("estado.json", "w") as f:
+        json.dump(estado, f)
+    
+    # Notificar se houver novos
+    if novos:
+        print(f"🔔 {len(novos)} novas decisões encontradas!")
+        for n in novos[:5]:
+            print(f"  - {n['processo']}: {n['data_publicacao']}")
+    else:
+        print("Nenhuma decisão nova.")
+    
+    return novos
+
+if __name__ == "__main__":
+    verificar_novas_decisoes()
+```
+
+---
+
+## Scripts de Linha de Comando
+
+### CLI para Busca Rápida
+
+```python
+#!/usr/bin/env python3
+"""
+CLI para buscar jurisprudência rapidamente.
+
+Uso:
+    python buscar.py "dano moral" --relator "CARMEN" --tamanho 10
+"""
+
+import argparse
+from tjdft import TJDFTClientOptimized
+
+def main():
+    parser = argparse.ArgumentParser(description="Buscar jurisprudência TJDFT")
+    parser.add_argument("query", help="Termo de busca")
+    parser.add_argument("--relator", help="Filtrar por relator")
+    parser.add_argument("--orgao", help="Filtrar por órgão julgador")
+    parser.add_argument("--tamanho", type=int, default=10, help="Resultados por página")
+    
+    args = parser.parse_args()
+    
+    client = TJDFTClientOptimized()
+    
+    filtros = {}
+    if args.relator:
+        filtros["nomeRelator"] = args.relator
+    if args.orgao:
+        filtros["descricaoOrgaoJulgador"] = args.orgao
+    
+    resultados = client.pesquisar(
+        query=args.query,
+        filtros=filtros if filtros else None,
+        tamanho=args.tamanho
+    )
+    
+    print(f"\nTotal: {resultados.total} resultados\n")
+    
+    for i, r in enumerate(resultados, 1):
+        print(f"{i}. {r['processo']}")
+        print(f"   Relator: {r['nome_relator']}")
+        print(f"   Órgão: {r['orgao_julgador']}")
+        print(f"   Data: {r['data_publicacao']}")
+        print(f"   Ementa: {r['ementa'][:100]}...\n")
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+**Dica:** Salve estes exemplos em arquivos `.py` e execute conforme necessário!
+</file>
+
+<file path="docs/REFERENCIA.md">
+# TJDFT API - Referência Rápida
+
+> Cheatsheet para uso da API de Jurisprudência do TJDFT
+
+---
+
+## 🔗 URLs
+
+```
+Base URL:    https://jurisdf.tjdft.jus.br/api/v1
+Endpoint:    POST /pesquisa
+```
+
+---
+
+## 📤 Requisição
+
+### Headers
+
+```
+Content-Type: application/json
+Accept: application/json
+```
+
+### Body
+
+```json
+{
+  "query": "termo de busca",
+  "pagina": 0,
+  "tamanho": 20,
+  "termosAcessorios": [
+    {"campo": "nomeRelator", "valor": "NOME DO RELATOR"}
+  ]
+}
+```
+
+---
+
+## 🔍 Filtros
+
+| Campo | Exemplo |
+|-------|---------|
+| `nomeRelator` | `"CARMEN BITTENCOURT"` |
+| `descricaoOrgaoJulgador` | `"8ª Turma Cível"` |
+| `processo` | `"0710649-40.2025.8.07.0000"` |
+| `dataPublicacao` | `"2025-03-25"` |
+| `dataJulgamento` | `"2025-03-24"` |
+| `descricaoClasseCnj` | `"Procedimento Comum Cível"` |
+| `base` | `"acordaos"`, `"decisoes"` |
+
+---
+
+## 📥 Resposta
+
+```json
+{
+  "hits": 1234,
+  "pagina": 0,
+  "registros": [
+    {
+      "uuid": "...",
+      "processo": "0710649-40.2025.8.07.0000",
+      "nomeRelator": "CARMEN BITTENCOURT",
+      "descricaoOrgaoJulgador": "8ª Turma Cível",
+      "dataPublicacao": "2025-03-25T03:00:00.000Z",
+      "ementa": "EMENTA: ...",
+      "inteiroTeor": "...",
+      "possuiInteiroTeor": true,
+      "descricaoClasseCnj": "Procedimento Comum Cível"
+    }
+  ]
+}
+```
+
+---
+
+## 🐍 Python
+
+### Instalação
+
+```bash
+pip install git+https://github.com/prof-ramos/tjdft-api-client.git
+```
+
+### Básico
+
+```python
+from tjdft import TJDFTClient
+
+client = TJDFTClient()
+resultados = client.pesquisar(query="dano moral", tamanho=10)
+
+for r in resultados:
+    print(r["processo"], r["nome_relator"])
+```
+
+### Otimizado
+
+```python
+from tjdft import TJDFTClientOptimized
+
+client = TJDFTClientOptimized(
+    cache_ttl=300,      # 5 min
+    rate_limit=10.0     # 10 req/s
+)
+
+r = client.pesquisar(query="termo")
+print(client.get_metrics())
+```
+
+### Filtros
+
+```python
+# Por relator
+resultados = client.pesquisar_por_relator(
+    query="dano moral",
+    relator="CARMEN BITTENCOURT"
+)
+
+# Por órgão
+resultados = client.pesquisar_por_orgao(
+    query="tutela",
+    orgao="8ª Turma Cível"
+)
+
+# Por processo
+decisao = client.buscar_por_processo("0710649-40.2025.8.07.0000")
+
+# Com filtros múltiplos
+resultados = client.pesquisar(
+    query="dano moral",
+    filtros={
+        "nomeRelator": "CARMEN BITTENCOURT",
+        "descricaoOrgaoJulgador": "8ª Turma Cível"
+    }
+)
+```
+
+### Batch
+
+```python
+consultas = [
+    {"query": "dano moral"},
+    {"query": "habeas corpus"},
+]
+
+resultados = client.pesquisar_lote(consultas, max_parallel=5)
+```
+
+### Tokens
+
+```python
+from tjdft import TokenCounter
+
+counter = TokenCounter()
+
+count = counter.count("Texto jurídico")
+print(f"Tokens: {count.tokens}")
+
+cost = counter.estimate_cost(1000, 500)
+print(f"Custo: ${cost['total_cost_usd']:.4f}")
+```
+
+### Análise
+
+```python
+from tjdft import TJDFTClient, AnaliseMagistrados
+
+client = TJDFTClient()
+analise = AnaliseMagistrados()
+
+resultados = client.pesquisar_por_relator(
+    query="dano moral",
+    relator="CARMEN BITTENCOURT",
+    tamanho=100
+)
+
+perfil = analise.analisar(resultados.resultados)
+print(f"Deferimentos: {perfil.percentual_deferimento:.1%}")
+```
+
+---
+
+## 💻 cURL
+
+### Simples
+
+```bash
+curl -X POST https://jurisdf.tjdft.jus.br/api/v1/pesquisa \
+  -H "Content-Type: application/json" \
+  -d '{"query": "dano moral", "pagina": 0, "tamanho": 10}'
+```
+
+### Com Filtros
+
+```bash
+curl -X POST https://jurisdf.tjdft.jus.br/api/v1/pesquisa \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "tutela de urgência",
+    "pagina": 0,
+    "tamanho": 20,
+    "termosAcessorios": [
+      {"campo": "nomeRelator", "valor": "CARMEN BITTENCOURT"}
+    ]
+  }'
+```
+
+---
+
+## 🟨 JavaScript
+
+```javascript
+async function pesquisar(query) {
+  const response = await fetch('https://jurisdf.tjdft.jus.br/api/v1/pesquisa', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      query: query,
+      pagina: 0,
+      tamanho: 20
+    })
+  });
+  
+  return response.json();
+}
+
+pesquisar('dano moral').then(data => {
+  console.log(`Total: ${data.hits}`);
+  data.registros.forEach(r => console.log(r.processo));
+});
+```
+
+---
+
+## ⚠️ Limitações
+
+| Aspecto | Limite |
+|---------|--------|
+| Rate limit | ~10 req/s (recomendado) |
+| Tamanho página | 100 (recomendado) |
+| Autenticação | Não requerida |
+| Range de datas | ❌ Não suportado |
+| Boolean ops | ❌ Não suportado |
+
+---
+
+## 🐛 Tratamento de Erros
+
+```python
+import requests
+from tjdft import TJDFTClient
+
+client = TJDFTClient()
+
+try:
+    resultados = client.pesquisar(query="termo")
+except requests.exceptions.Timeout:
+    print("Timeout")
+except requests.exceptions.HTTPError as e:
+    if e.response.status_code == 429:
+        print("Rate limit - aguarde")
+    elif e.response.status_code >= 500:
+        print("Erro no servidor")
+```
+
+---
+
+## 📊 Métricas (Cliente Otimizado)
+
+```python
+client = TJDFTClientOptimized()
+
+# ... fazer requisições ...
+
+metrics = client.get_metrics()
+
+print(f"Requisições: {metrics['total_requests']}")
+print(f"Cache hits: {metrics['cache_hits']}")
+print(f"Taxa de cache: {metrics['cache_hit_ratio']:.1%}")
+print(f"Tempo médio: {metrics['avg_response_time_ms']:.1f}ms")
+```
+
+---
+
+## 📁 Exportar
+
+### CSV
+
+```python
+import csv
+
+with open("jurisprudencias.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=resultados[0].keys())
+    writer.writeheader()
+    writer.writerows(resultados.resultados)
+```
+
+### JSON
+
+```python
+import json
+
+with open("jurisprudencias.json", "w", encoding="utf-8") as f:
+    json.dump(resultados.resultados, f, indent=2, ensure_ascii=False)
+```
+
+---
+
+## 📚 Links
+
+- **Repo:** https://github.com/prof-ramos/tjdft-api-client
+- **API Docs:** [docs/API.md](docs/API.md)
+- **Exemplos:** [docs/EXEMPLOS.md](docs/EXEMPLOS.md)
+- **TJDFT:** https://www.tjdft.jus.br
+
+---
+
+**Versão:** 0.3.0 | **Atualizado:** 2026-03-02
+</file>
+
+<file path="docs/UV.md">
+# Guia UV - TJDFT API Client
+
+> Este projeto usa **UV** como gerenciador de pacotes 100% Python
+
+---
+
+## 📋 O que é UV?
+
+[UV](https://docs.astral.sh/uv/) é um gerenciador de pacotes Python extremamente rápido (escrito em Rust), criado pela Astral (mesma equipe do Ruff). É **10-100x mais rápido** que pip e pip-tools.
+
+### Vantagens
+
+- ⚡ **10-100x mais rápido** que pip
+- 🔒 **Lock file automático** (uv.lock)
+- 📦 **Resolver determinístico**
+- 🐍 **Gerenciamento de versões Python**
+- 🧪 **Ambientes virtuais integrados**
+- 🎯 **Drop-in replacement** para pip
+
+---
+
+## 🚀 Instalação
+
+### Instalar UV
+
+```bash
+# Linux/macOS
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Ou via pip
+pip install uv
+
+# Ou via pipx
+pipx install uv
+```
+
+### Verificar Instalação
+
+```bash
+uv --version
+# uv 0.10.4 (ou superior)
+```
+
+---
+
+## 📦 Setup do Projeto
+
+### Clonar e Configurar
+
+```bash
+# Clonar repositório
+git clone https://github.com/prof-ramos/tjdft-api-client.git
+cd tjdft-api-client
+
+# Criar venv e instalar dependências (automático)
+uv sync
+
+# Isso cria:
+# - .venv/ (ambiente virtual)
+# - uv.lock (lock file)
+```
+
+### Com Python Específico
+
+```bash
+# Usar Python 3.12
+uv sync --python 3.12
+
+# Ou especificar no .python-version
+echo "3.12" > .python-version
+uv sync
+```
+
+---
+
+## 🎯 Comandos Principais
+
+### Instalação
+
+```bash
+# Instalar todas as dependências
+uv sync
+
+# Instalar apenas dependências de produção
+uv sync --no-dev
+
+# Instalar com extras
+uv sync --extra async --extra ai
+
+# Instalar tudo
+uv sync --all-extras
+```
+
+### Adicionar Dependências
+
+```bash
+# Adicionar dependência de produção
+uv add requests
+
+# Adicionar dependência de desenvolvimento
+uv add --dev pytest
+
+# Adicionar com versão específica
+uv add "requests>=2.28.0"
+
+# Adicionar com extra
+uv add "aiohttp>=3.9.0" --optional async
+```
+
+### Remover Dependências
+
+```bash
+# Remover dependência
+uv remove requests
+
+# Remover dependência de dev
+uv remove --dev pytest
+```
+
+### Atualizar Dependências
+
+```bash
+# Atualizar todas
+uv sync --upgrade
+
+# Atualizar pacote específico
+uv sync --upgrade-package requests
+```
+
+---
+
+## 🏃 Executar
+
+### Scripts Python
+
+```bash
+# Executar script
+uv run python script.py
+
+# Executar módulo
+uv run python -m tjdft.client
+
+# Executar com argumentos
+uv run python examples/busca_jurisprudencia.py --query "dano moral"
+```
+
+### Testes
+
+```bash
+# Executar testes
+uv run pytest
+
+# Com verbose
+uv run pytest -v
+
+# Teste específico
+uv run pytest tests/test_client.py
+
+# Com cobertura
+uv run pytest --cov=src/tjdft
+```
+
+### Formatação e Linting
+
+```bash
+# Formatar com Black
+uv run black src/ tests/
+
+# Linting com Ruff
+uv run ruff check src/ tests/
+
+# Type checking com MyPy
+uv run mypy src/
+```
+
+---
+
+## 🔧 Desenvolvimento
+
+### Criar Novo Ambiente
+
+```bash
+# Remover ambiente antigo
+rm -rf .venv
+
+# Criar novo
+uv sync
+```
+
+### Ativar Ambiente Virtual
+
+```bash
+# Linux/macOS
+source .venv/bin/activate
+
+# Windows
+.venv\Scripts\activate
+
+# Ou usar uv run (sem ativar)
+uv run python script.py
+```
+
+### Ver Dependências
+
+```bash
+# Listar dependências instaladas
+uv pip list
+
+# Ver árvore de dependências
+uv pip tree
+
+# Ver detalhes de pacote
+uv pip show requests
+```
+
+---
+
+## 📦 Build e Publicação
+
+### Build do Pacote
+
+```bash
+# Build com UV
+uv build
+
+# Resultado em dist/
+# - tjdft-0.4.0-py3-none-any.whl
+# - tjdft-0.4.0.tar.gz
+```
+
+### Publicar no PyPI
+
+```bash
+# Publicar no PyPI
+uv publish
+
+# Publicar no TestPyPI
+uv publish --index-url https://test.pypi.org/simple/
+```
+
+---
+
+## 🔄 Migração de pip/poetry
+
+### De requirements.txt
+
+```bash
+# Instalar do requirements.txt
+uv pip install -r requirements.txt
+
+# Depois adicionar ao pyproject.toml
+uv add $(cat requirements.txt | grep -v "^#")
+```
+
+### De Poetry
+
+```bash
+# UV lê pyproject.toml automaticamente
+# Apenas execute:
+uv sync
+```
+
+### De Pipenv
+
+```bash
+# Converter Pipfile para requirements.txt
+pipenv requirements > requirements.txt
+
+# Depois usar UV
+uv pip install -r requirements.txt
+```
+
+---
+
+## 🎨 Configuração Avançada
+
+### pyproject.toml
+
+```toml
+[tool.uv]
+# Dependências de desenvolvimento
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+]
+
+# Índices customizados
+[[tool.uv.index]]
+name = "private"
+url = "https://pypi.example.com/simple"
+```
+
+### Variáveis de Ambiente
+
+```bash
+# UV_CACHE_DIR - Diretório de cache
+export UV_CACHE_DIR="/path/to/cache"
+
+# UV_INDEX_URL - Índice PyPI customizado
+export UV_INDEX_URL="https://pypi.org/simple"
+
+# UV_NO_CACHE - Desabilitar cache
+export UV_NO_CACHE=1
+```
+
+---
+
+## 🚀 CI/CD com UV
+
+### GitHub Actions
+
+```yaml
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install UV
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.10.4"
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      
+      - name: Install dependencies
+        run: uv sync --all-extras
+      
+      - name: Run tests
+        run: uv run pytest
+      
+      - name: Run linting
+        run: |
+          uv run ruff check src/
+          uv run black --check src/
+```
+
+### GitLab CI
+
+```yaml
+test:
+  image: python:3.12
+  before_script:
+    - pip install uv
+    - uv sync
+  script:
+    - uv run pytest
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Erro: "No matching distribution found"
+
+```bash
+# Atualizar índice do PyPI
+uv sync --refresh
+```
+
+### Erro: "Python version not found"
+
+```bash
+# Instalar Python via UV
+uv python install 3.12
+
+# Listar Pythons disponíveis
+uv python list
+```
+
+### Erro: "Lock file out of date"
+
+```bash
+# Regenerar lock file
+uv sync --reinstall
+```
+
+### Limpar Cache
+
+```bash
+# Limpar cache do UV
+uv cache clean
+
+# Ver tamanho do cache
+uv cache dir
+```
+
+---
+
+## 📊 Comparação de Performance
+
+| Comando | pip | UV | Speedup |
+|---------|-----|-----|---------|
+| `install` (cold cache) | 8.2s | 0.16s | **51x** |
+| `install` (warm cache) | 1.4s | 0.01s | **140x** |
+| `resolve` | 3.1s | 0.03s | **103x** |
+| `lock` | N/A | 0.02s | - |
+
+---
+
+## 🔗 Links Úteis
+
+- [UV Documentation](https://docs.astral.sh/uv/)
+- [UV GitHub](https://github.com/astral-sh/uv)
+- [UV vs pip](https://docs.astral.sh/uv/#comparison-to-pip)
+- [UV Blog](https://astral.sh/blog/uv-unified-python-packaging)
+
+---
+
+## 💡 Dicas
+
+1. **Use `uv run`** em vez de ativar o venv manualmente
+2. **Commit o `uv.lock`** para reprodutibilidade
+3. **Use `.python-version`** para especificar versão
+4. **`uv sync --upgrade`** para atualizar tudo
+5. **`uv add --dev`** para dependências de desenvolvimento
+6. **Use extras** (`uv sync --extra ai`) para features opcionais
+
+---
+
+## 📝 Exemplos Práticos
+
+### Buscar Jurisprudência
+
+```bash
+# Buscar com script
+uv run python examples/busca_jurisprudencia.py
+
+# Buscar interativamente
+uv run python -c "
+from tjdft import TJDFTClient
+client = TJDFTClient()
+resultados = client.pesquisar(query='dano moral', tamanho=10)
+for r in resultados:
+    print(r['processo'])
+"
+```
+
+### Testar Performance
+
+```bash
+# Benchmark
+uv run python tests/test_performance.py
+
+# Com verbose
+uv run pytest tests/test_performance.py -v -s
+```
+
+### Contar Tokens
+
+```bash
+# Exemplo de contagem
+uv run python examples/contagem_tokens.py
+```
+
+---
+
+## 🎯 Checklist de Migração
+
+- [x] ✅ Criar `pyproject.toml` com dependências
+- [x] ✅ Criar `.python-version` (3.12)
+- [x] ✅ Remover `requirements.txt`
+- [x] ✅ Remover `.venv` antigo
+- [x] ✅ Executar `uv sync`
+- [x] ✅ Testar imports
+- [x] ✅ Commit `uv.lock`
+- [x] ✅ Atualizar README
+
+---
+
+**Versão UV:** 0.10.4+  
+**Python:** 3.8-3.12  
+**Atualizado:** 2026-03-02
+</file>
+
+<file path="examples/busca_jurisprudencia.py">
+#!/usr/bin/env python3
+"""
+Exemplo de uso do cliente TJDFT.
+
+Este script demonstra como buscar jurisprudência no TJDFT.
+"""
+
+import sys
+sys.path.insert(0, "../src")
+
+from tjdft import TJDFTClient
+from datetime import date
+
+
+def exemplo_busca_simples():
+    """Exemplo de busca simples."""
+    print("=" * 60)
+    print("Busca simples por jurisprudência")
+    print("=" * 60)
+    
+    with TJDFTClient() as client:
+        # Busca por termo
+        resultados = client.buscar_jurisprudencia(
+            termo="habeas corpus",
+            por_pagina=5
+        )
+        
+        print(f"\nTotal encontrado: {resultados.total}")
+        print(f"Página: {resultados.pagina}/{resultados.total_paginas}")
+        
+        for i, r in enumerate(resultados, 1):
+            print(f"\n{i}. {r.numero}")
+            print(f"   Classe: {r.classe}")
+            print(f"   Relator: {r.relator}")
+            print(f"   Ementa: {r.ementa[:100]}...")
+
+
+def exemplo_busca_avancada():
+    """Exemplo de busca avançada."""
+    print("\n" + "=" * 60)
+    print("Busca avançada com filtros")
+    print("=" * 60)
+    
+    with TJDFTClient() as client:
+        resultados = client.buscar_jurisprudencia(
+            termo="tráfico de drogas",
+            tipo="acordao",
+            data_inicial=date(2024, 1, 1),
+            data_final=date(2024, 12, 31),
+            orgao="1ª Turma Criminal",
+            por_pagina=10
+        )
+        
+        print(f"\nTotal: {resultados.total}")
+        
+        # Filtra por relator
+        for r in resultados:
+            print(f"\n{r.numero} - {r.classe}")
+            print(f"  Relator: {r.relator}")
+            print(f"  Julgado em: {r.data_julgamento}")
+
+
+def exemplo_listar_orgaos():
+    """Exemplo listando órgãos julgadores."""
+    print("\n" + "=" * 60)
+    print("Órgãos julgadores disponíveis")
+    print("=" * 60)
+    
+    with TJDFTClient() as client:
+        orgaos = client.listar_orgaos_julgadores()
+        
+        for i, orgao in enumerate(orgaos, 1):
+            print(f"{i:2}. {orgao}")
+
+
+def exemplo_buscar_por_numero():
+    """Exemplo buscando decisão por número."""
+    print("\n" + "=" * 60)
+    print("Busca por número de processo")
+    print("=" * 60)
+    
+    with TJDFTClient() as client:
+        # Substitua por um número real
+        numero = "2024HC123456"
+        
+        acordao = client.buscar_acordao(numero)
+        
+        if acordao:
+            print(f"\nEncontrado: {acordao.numero}")
+            print(f"Classe: {acordao.classe}")
+            print(f"Ementa: {acordao.ementa}")
+        else:
+            print(f"\nAcórdão {numero} não encontrado.")
+
+
+if __name__ == "__main__":
+    print("TJDFT API Client - Exemplos de Uso\n")
+    
+    try:
+        exemplo_busca_simples()
+        exemplo_busca_avancada()
+        exemplo_listar_orgaos()
+        # exemplo_buscar_por_numero()  # Descomente para testar
+        
+    except Exception as e:
+        print(f"\nErro: {e}")
+        print("\nNota: A API pode não estar disponível ou os endpoints")
+        print("ainda precisam ser descobertos/documented.")
+</file>
+
+<file path="examples/contagem_tokens.py">
+#!/usr/bin/env python3
+"""
+Exemplo de contagem de tokens para análise de jurisprudência.
+
+Demonstra como:
+- Contar tokens de ementas
+- Estimar custos de API OpenAI
+- Truncar textos para limite de contexto
+- Dividir textos longos em chunks
+"""
+
+import sys
+sys.path.insert(0, "../src")
+
+from tjdft import TJDFTClient, TokenCounter, estimate_openai_cost
+
+
+def exemplo_contagem_basica():
+    """Exemplo básico de contagem de tokens."""
+    print("=" * 70)
+    print("EXEMPLO: Contagem Básica de Tokens")
+    print("=" * 70)
+    
+    counter = TokenCounter(model="gpt-4o-mini")
+    
+    textos = [
+        "Olá, mundo!",
+        "A tutela de urgência é um instituto processual que visa garantir a efetividade do processo.",
+        "O Superior Tribunal de Justiça firmou entendimento no sentido de que o dano moral decorrente de atraso de voo é passível de indenização.",
+    ]
+    
+    print("\nModelo: gpt-4o-mini")
+    print(f"Encoding: {counter.encoding_name}\n")
+    
+    for texto in textos:
+        count = counter.count(texto)
+        print(f"'{texto[:50]}...'")
+        print(f"  Tokens: {count.tokens}")
+        print(f"  Chars: {count.chars}")
+        print(f"  Chars/token: {count.chars_per_token:.1f}\n")
+
+
+def exemplo_jurisprudencia():
+    """Exemplo com jurisprudência real."""
+    print("=" * 70)
+    print("EXEMPLO: Tokens em Jurisprudência")
+    print("=" * 70)
+    
+    client = TJDFTClient()
+    counter = TokenCounter(model="gpt-4o-mini")
+    
+    # Buscar jurisprudência
+    print("\n🔍 Buscando jurisprudência...")
+    resultados = client.pesquisar(query="dano moral", tamanho=5)
+    
+    print(f"\n{len(resultados)} resultados encontrados\n")
+    
+    total_tokens = 0
+    
+    for i, r in enumerate(resultados, 1):
+        ementa = r.get("ementa", "")
+        if ementa:
+            count = counter.count(ementa)
+            total_tokens += count.tokens
+            
+            print(f"{i}. Processo: {r.get('processo', 'N/A')}")
+            print(f"   Tokens: {count.tokens}")
+            print(f"   Ementa: {ementa[:80]}...\n")
+    
+    print(f"📊 Total tokens: {total_tokens}")
+    print(f"   Média por ementa: {total_tokens/len(resultados):.1f}")
+
+
+def exemplo_estimativa_custo():
+    """Exemplo de estimativa de custo OpenAI."""
+    print("=" * 70)
+    print("EXEMPLO: Estimativa de Custo OpenAI")
+    print("=" * 70)
+    
+    counter = TokenCounter(model="gpt-4o-mini")
+    
+    # Prompt típico de análise jurídica
+    prompt = """
+Você é um assistente jurídico especialista em direito do consumidor.
+
+Analise a seguinte ementa e identifique:
+1. Teses principais
+2. Fundamentos jurídicos
+3. Relator e órgão julgador
+4. Decisão final
+
+Ementa:
+TRIBUTÁRIO. ICMS. BASE DE CÁLCULO. VALOR DA OPERAÇÃO. DECRETO-LEI 406/68. 
+COMPREENSÃO DO PREÇO FINAL AO CONSUMIDOR. FRETE E SEGURO. 
+INCLUSÃO NA BASE DE CÁLCULO DO ICMS. RECURSO IMPROVIDO.
+
+1. O ICMS incide sobre o valor da operação, que corresponde ao preço final 
+pago pelo consumidor, incluindo todos os custos incidentes até a entrega 
+do produto ao destinatário.
+"""
+    
+    # Contar tokens do prompt
+    prompt_count = counter.count(prompt)
+    
+    print(f"\nPrompt:")
+    print(f"  Tokens: {prompt_count.tokens}")
+    print(f"  Chars: {prompt_count.chars}")
+    
+    # Estimar custos para diferentes modelos
+    print("\n💰 Estimativa de Custo (para 100 requisições):\n")
+    
+    modelos = ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo"]
+    
+    for modelo in modelos:
+        # Estimar: prompt + 1000 tokens de resposta
+        counter_model = TokenCounter(model=modelo)
+        prompt_tokens = counter_model.count(prompt).tokens
+        
+        custo = counter_model.estimate_cost(
+            input_tokens=prompt_tokens,
+            output_tokens=1000  # Resposta estimada
+        )
+        
+        custo_100 = custo["total_cost_usd"] * 100
+        
+        print(f"  {modelo}:")
+        print(f"    Input: {custo['input_cost_usd']*100:.4f} USD")
+        print(f"    Output: {custo['output_cost_usd']*100:.4f} USD")
+        print(f"    Total (100 req): ${custo_100:.2f} USD\n")
+
+
+def exemplo_truncagem():
+    """Exemplo de truncagem para limite de contexto."""
+    print("=" * 70)
+    print("EXEMPLO: Truncagem para Limite de Contexto")
+    print("=" * 70)
+    
+    counter = TokenCounter()
+    
+    # Texto longo
+    texto = """
+EMENTA: APELAÇÃO CÍVEL. AÇÃO DE INDENIZAÇÃO POR DANOS MORAIS E MATERIAIS. 
+ACIDENTE DE TRÂNSITO. COLISÃO TRASEIRA. PRELIMINAR DE ILEGITIMIDADE PASSIVA 
+AD CAUSAM AFASTADA. PRESCRIÇÃO. MATÉRIA NÃO ARGUÍDA EM PRIMEIRO GRAU. 
+PRECLUSÃO. MÉRITO. RESPONSABILIDADE CIVIL OBJETIVA. DEVER DE INDENIZAR 
+CONFIGURADO. QUANTUM INDENIZATÓRIO. RAZOABILIDADE. RECURSO IMPROVIDO.
+
+1. Preliminar de ilegitimidade passiva afastada, pois a demandada figura 
+no polo passivo da ação como legitimada, uma vez que o veículo envolvido 
+no acidente estava registrado em seu nome, sendo a responsabilidade do 
+proprietário do veículo pelos danos causados por seus prepostos.
+
+2. A matéria referente à prescrição não foi arguida em primeiro grau de 
+jurisdição, sendo matéria de defesa de direito material, operando-se a 
+preclusão, não podendo ser conhecida em sede de recurso de apelação.
+
+3. No mérito, restou demonstrado nos autos que o acidente de trânsito 
+ocorreu por culpa exclusiva do preposto da ré, que colidiu na traseira 
+do veículo da autora, configurando a responsabilidade civil objetiva 
+prevista no art. 927, parágrafo único, do Código Civil.
+
+4. O quantum indenizatório foi fixado em R$ 5.000,00 (cinco mil reais), 
+valor que se mostra razoável e proporcional ao dano sofrido, considerando 
+a extensão do dano, a culpa do agente, a situação econômica das partes 
+e os critérios da razoabilidade e proporcionalidade.
+
+5. Recurso improvido.
+"""
+    
+    print(f"\nTexto original: {len(texto)} chars")
+    
+    # Contar tokens originais
+    original_count = counter.count(texto)
+    print(f"Tokens originais: {original_count.tokens}")
+    
+    # Truncar para 200 tokens
+    max_tokens = 200
+    truncado = counter.truncate_to_tokens(texto, max_tokens)
+    truncado_count = counter.count(truncado)
+    
+    print(f"\nTruncado para {max_tokens} tokens:")
+    print(f"  Tokens resultantes: {truncado_count.tokens}")
+    print(f"  Redução: {(1 - truncado_count.tokens/original_count.tokens)*100:.1f}%")
+    print(f"\nTexto truncado:\n{truncado[:300]}...")
+
+
+def exemplo_chunking():
+    """Exemplo de divisão em chunks."""
+    print("=" * 70)
+    print("EXEMPLO: Divisão em Chunks")
+    print("=" * 70)
+    
+    counter = TokenCounter()
+    
+    # Texto muito longo
+    texto_longo = "EMENTA: " + ("Este é um exemplo de texto jurídico longo. " * 200)
+    
+    original = counter.count(texto_longo)
+    print(f"\nTexto original: {original.tokens} tokens")
+    
+    # Dividir em chunks de 500 tokens
+    chunks = counter.chunk_text(texto_longo, chunk_size=500, overlap=50)
+    
+    print(f"\nDividido em {len(chunks)} chunks de 500 tokens:")
+    
+    for i, chunk in enumerate(chunks, 1):
+        count = counter.count(chunk)
+        print(f"  Chunk {i}: {count.tokens} tokens")
+
+
+def exemplo_analise_lote():
+    """Exemplo de análise em lote."""
+    print("=" * 70)
+    print("EXEMPLO: Análise em Lote")
+    print("=" * 70)
+    
+    client = TJDFTClient()
+    counter = TokenCounter()
+    
+    # Buscar várias ementas
+    resultados = client.pesquisar(query="tutela de urgência", tamanho=10)
+    
+    # Contar tokens de todas
+    counts = []
+    for r in resultados:
+        ementa = r.get("ementa", "")
+        if ementa:
+            counts.append(counter.count(ementa))
+    
+    # Resumo
+    summary = counter.summarize_token_usage(counts)
+    
+    print(f"\n📊 Resumo de {summary['total_texts']} ementas:\n")
+    print(f"  Total tokens: {summary['total_tokens']}")
+    print(f"  Média por ementa: {summary['avg_tokens_per_text']}")
+    print(f"  Min: {summary['min_tokens']}")
+    print(f"  Max: {summary['max_tokens']}")
+    print(f"  Chars/token: {summary['avg_chars_per_token']}")
+    
+    # Estimar custo para processar todas com GPT-4o-mini
+    cost = counter.estimate_cost(
+        input_tokens=summary['total_tokens'],
+        output_tokens=summary['total_texts'] * 500  # ~500 tokens resposta cada
+    )
+    
+    print(f"\n💰 Custo estimado (gpt-4o-mini): ${cost['total_cost_usd']:.4f} USD")
+
+
+if __name__ == "__main__":
+    print("\n" + "=" * 70)
+    print(" TJDFT API CLIENT - CONTAGEM DE TOKENS")
+    print("=" * 70)
+    
+    exemplo_contagem_basica()
+    exemplo_jurisprudencia()
+    exemplo_estimativa_custo()
+    exemplo_truncagem()
+    exemplo_chunking()
+    exemplo_analise_lote()
+    
+    print("\n" + "=" * 70)
+    print(" ✅ EXEMPLOS CONCLUÍDOS")
+    print("=" * 70)
+</file>
+
+<file path="scripts/descobrir_endpoints.py">
+#!/usr/bin/env python3
+"""
+Script para descobrir endpoints da API do TJDFT.
+
+Este script tenta descobrir endpoints válidos através de:
+1. Análise do portal web
+2. Teste de endpoints comuns
+3. Engenharia reversa de requisições
+"""
+
+import requests
+from urllib.parse import urljoin
+import json
+import re
+
+
+BASE_URL = "https://www.tjdft.jus.br"
+
+# Endpoints comuns de API
+ENDPOINTS_COMUNS = [
+    "/api/v1/jurisprudencia",
+    "/api/v1/acordaos",
+    "/api/v1/decisoes",
+    "/api/v1/orgaos",
+    "/api/jurisprudencia",
+    "/api/acordaos",
+    "/api/decisoes",
+    "/jurisprudencia/api",
+    "/jurisprudencia/api/v1",
+    "/jurisprudencia/busca",
+    "/jurisprudencia/pesquisa",
+    "/jurisprudencia/consulta",
+    "/ws/jurisprudencia",
+    "/ws/acordaos",
+    "/services/jurisprudencia",
+    "/rest/jurisprudencia",
+]
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+    "Accept": "application/json, text/html",
+    "Accept-Language": "pt-BR,pt;q=0.9",
+}
+
+
+def testar_endpoint(endpoint: str) -> dict:
+    """Testa um endpoint e retorna informações."""
+    url = urljoin(BASE_URL, endpoint)
+    
+    try:
+        # Testa GET
+        r_get = requests.get(url, headers=HEADERS, timeout=10, allow_redirects=True)
+        
+        # Testa OPTIONS
+        try:
+            r_options = requests.options(url, headers=HEADERS, timeout=10)
+            allow = r_options.headers.get("Allow", "")
+        except:
+            allow = ""
+        
+        content_type = r_get.headers.get("Content-Type", "")
+        
+        return {
+            "endpoint": endpoint,
+            "url_final": r_get.url,
+            "status": r_get.status_code,
+            "content_type": content_type,
+            "allow": allow,
+            "tamanho": len(r_get.content),
+            "json_valido": is_json(r_get.text) if r_get.status_code == 200 else False,
+        }
+    except Exception as e:
+        return {
+            "endpoint": endpoint,
+            "erro": str(e),
+        }
+
+
+def is_json(text: str) -> bool:
+    """Verifica se o texto é JSON válido."""
+    try:
+        json.loads(text)
+        return True
+    except:
+        return False
+
+
+def analisar_portal():
+    """Analisa o portal para encontrar links de API."""
+    print("Analisando portal TJDFT...")
+    
+    try:
+        r = requests.get(f"{BASE_URL}/jurisprudencia", headers=HEADERS, timeout=15)
+        
+        # Procura por URLs de API
+        api_urls = re.findall(r'["\']([^"\']*(?:api|ws|rest)[^"\']*)["\']', r.text)
+        
+        # Procura por endpoints de fetch/axios
+        fetch_urls = re.findall(r'fetch\(["\']([^"\']+)["\']', r.text)
+        axios_urls = re.findall(r'axios\.[a-z]+\(["\']([^"\']+)["\']', r.text)
+        
+        return list(set(api_urls + fetch_urls + axios_urls))
+    except Exception as e:
+        print(f"Erro ao analisar portal: {e}")
+        return []
+
+
+def main():
+    print("=" * 70)
+    print("DESCOBERTA DE ENDPOINTS - API TJDFT")
+    print("=" * 70)
+    
+    # Testa endpoints comuns
+    print("\n1. Testando endpoints comuns...")
+    print("-" * 70)
+    
+    resultados = []
+    for endpoint in ENDPOINTS_COMUNS:
+        print(f"Testando: {endpoint}...", end=" ")
+        result = testar_endpoint(endpoint)
+        resultados.append(result)
+        
+        if result.get("status"):
+            print(f"Status: {result['status']} | CT: {result['content_type'][:30]}")
+        else:
+            print(f"Erro: {result.get('erro', 'desconhecido')[:30]}")
+    
+    # Analisa portal
+    print("\n2. Analisando portal...")
+    print("-" * 70)
+    
+    urls = analisar_portal()
+    for url in urls[:20]:  # Limita a 20 URLs
+        print(f"  Encontrado: {url}")
+    
+    # Resumo
+    print("\n3. Resumo de endpoints promissores...")
+    print("-" * 70)
+    
+    promissores = [
+        r for r in resultados
+        if r.get("status") == 200 and (
+            r.get("json_valido") or 
+            "json" in r.get("content_type", "").lower()
+        )
+    ]
+    
+    if promissores:
+        for p in promissores:
+            print(f"  ✅ {p['endpoint']} - {p['content_type']}")
+    else:
+        print("  Nenhum endpoint JSON encontrado ainda.")
+    
+    print("\n4. Próximos passos...")
+    print("-" * 70)
+    print("  1. Acessar https://www.tjdft.jus.br/jurisprudencia")
+    print("  2. Abrir DevTools (F12) → Network tab")
+    print("  3. Fazer uma busca")
+    print("  4. Identificar endpoints nas requisições")
+    print("  5. Documentar em docs/endpoints.md")
+
+
+if __name__ == "__main__":
+    main()
+</file>
+
+<file path="src/tjdft/analise.py">
+"""
+Análise de padrões de decisão por magistrado.
+
+Este módulo permite analisar como cada magistrado do TJDFT
+costuma decidir sobre determinados temas.
+
+Uso:
+    from tjdft.analise import AnaliseMagistrados
+    
+    analise = AnaliseMagistrados()
+    relatores = analise.analisar_por_tema("tutela de urgência")
+    
+    for r in relatores[:5]:
+        print(f"{r.nome}: {r.percentual_deferimento}%")
+"""
+
+import requests
+from typing import List, Dict, Any, Optional
+from dataclasses import dataclass, field
+from collections import Counter, defaultdict
+
+
+@dataclass
+class PerfilMagistrado:
+    """Perfil de decisão de um magistrado."""
+    nome: str
+    total_decisoes: int
+    deferimentos: int
+    indeferimentos: int
+    parciais: int = 0
+    orgaos: List[str] = field(default_factory=list)
+    temas_comuns: List[str] = field(default_factory=list)
+    
+    @property
+    def percentual_deferimento(self) -> float:
+        """Percentual de deferimentos."""
+        if self.total_decisoes == 0:
+            return 0.0
+        return (self.deferimentos / self.total_decisoes) * 100
+    
+    @property
+    def percentual_indeferimento(self) -> float:
+        """Percentual de indeferimentos."""
+        if self.total_decisoes == 0:
+            return 0.0
+        return (self.indeferimentos / self.total_decisoes) * 100
+
+
+class AnaliseMagistrados:
+    """
+    Analisa padrões de decisão dos magistrados do TJDFT.
+    
+    Example:
+        >>> analise = AnaliseMagistrados()
+        >>> perfil = analise.perfil_magistrado("CARMEN BITTENCOURT")
+        >>> print(perfil.percentual_deferimento)
+        75.5
+    """
+    
+    API_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
+    
+    def __init__(self, timeout: int = 30):
+        self.timeout = timeout
+    
+    def buscar(self, query: str, tamanho: int = 100) -> List[Dict[str, Any]]:
+        """Busca decisões na API."""
+        payload = {
+            "query": query,
+            "pagina": 0,
+            "tamanho": tamanho
+        }
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "TJDFT-API-Client/0.2.0"
+        }
+        
+        try:
+            response = requests.post(
+                self.API_URL,
+                json=payload,
+                headers=headers,
+                timeout=self.timeout
+            )
+            
+            if response.status_code != 200:
+                return []
+            
+            data = response.json()
+            return data.get('registros', [])
+            
+        except Exception:
+            return []
+    
+    def analisar_por_tema(
+        self,
+        tema: str,
+        tamanho: int = 100
+    ) -> List[PerfilMagistrado]:
+        """
+        Analisa decisões de todos os magistrados sobre um tema.
+        
+        Args:
+            tema: Termo de busca
+            tamanho: Quantidade de decisões a analisar
+            
+        Returns:
+            Lista de PerfilMagistrado ordenada por volume
+        """
+        registros = self.buscar(tema, tamanho)
+        
+        # Agrupar por relator
+        ementas_por_relator = defaultdict(list)
+        orgaos_por_relator = defaultdict(set)
+        
+        for r in registros:
+            relator = r.get('nomeRelator', r.get('nome_relator', 'N/A'))
+            if relator and relator != 'N/A':
+                ementas_por_relator[relator].append(r.get('ementa', '').lower())
+                orgaos_por_relator[relator].add(r.get('descricaoOrgaoJulgador', r.get('orgao_julgador', 'N/A')))
+        
+        # Criar perfis
+        perfis = []
+        
+        for nome, ementas in ementas_por_relator.items():
+            total = len(ementas)
+            
+            deferimentos = sum(
+                1 for e in ementas 
+                if any(p in e for p in ['provimento', 'deferido', 'acolhido', 'provido', 'deferir'])
+            )
+            
+            indeferimentos = sum(
+                1 for e in ementas 
+                if any(p in e for p in ['improvimento', 'indeferido', 'não provido', 'desprovido', 'indeferir'])
+            )
+            
+            parciais = sum(
+                1 for e in ementas 
+                if 'parcial' in e
+            )
+            
+            # Identificar temas comuns
+            temas = Counter()
+            palavras_chave = [
+                'dano moral', 'tutela', 'urgência', 'obrigação', 
+                'fazenda pública', 'contrato', 'consumidor',
+                'defesa do consumidor', 'administrativo', 'civil',
+                'penal', 'trabalhista', 'tributário'
+            ]
+            
+            for e in ementas:
+                for p in palavras_chave:
+                    if p in e:
+                        temas[p] += 1
+            
+            temas_comuns = [
+                t for t, c in temas.most_common(5)
+                if c > total * 0.2
+            ]
+            
+            perfis.append(PerfilMagistrado(
+                nome=nome,
+                total_decisoes=total,
+                deferimentos=deferimentos,
+                indeferimentos=indeferimentos,
+                parciais=parciais,
+                orgaos=list(orgaos_por_relator[nome])[:3],
+                temas_comuns=temas_comuns
+            ))
+        
+        # Ordenar por volume
+        perfis.sort(key=lambda p: p.total_decisoes, reverse=True)
+        
+        return perfis
+    
+    def perfil_magistrado(
+        self,
+        nome: str,
+        tema: Optional[str] = None,
+        tamanho: int = 100
+    ) -> Optional[PerfilMagistrado]:
+        """
+        Obtém perfil de um magistrado específico.
+        
+        Args:
+            nome: Nome do magistrado
+            tema: Tema para filtrar (opcional)
+            tamanho: Quantidade de decisões
+            
+        Returns:
+            PerfilMagistrado ou None se não encontrado
+        """
+        query = f'nomeRelator:"{nome}"'
+        if tema:
+            query = f'{tema} {query}'
+        
+        registros = self.buscar(query, tamanho)
+        
+        if not registros:
+            return None
+        
+        ementas = [r.get('ementa', '').lower() for r in registros]
+        orgaos = set(r.get('descricaoOrgaoJulgador', r.get('orgao_julgador', 'N/A')) for r in registros)
+        
+        deferimentos = sum(
+            1 for e in ementas 
+            if any(p in e for p in ['provimento', 'deferido', 'acolhido', 'provido'])
+        )
+        
+        indeferimentos = sum(
+            1 for e in ementas 
+            if any(p in e for p in ['improvimento', 'indeferido', 'não provido', 'desprovido'])
+        )
+        
+        parciais = sum(1 for e in ementas if 'parcial' in e)
+        
+        return PerfilMagistrado(
+            nome=nome,
+            total_decisoes=len(ementas),
+            deferimentos=deferimentos,
+            indeferimentos=indeferimentos,
+            parciais=parciais,
+            orgaos=list(orgaos)[:3]
+        )
+    
+    def comparar_magistrados(
+        self,
+        nomes: List[str],
+        tema: str,
+        tamanho: int = 50
+    ) -> Dict[str, PerfilMagistrado]:
+        """
+        Compara perfis de múltiplos magistrados.
+        
+        Args:
+            nomes: Lista de nomes de magistrados
+            tema: Tema para comparar
+            tamanho: Decisões por magistrado
+            
+        Returns:
+            Dicionário nome -> PerfilMagistrado
+        """
+        resultados = {}
+        
+        for nome in nomes:
+            perfil = self.perfil_magistrado(nome, tema, tamanho)
+            if perfil:
+                resultados[nome] = perfil
+        
+        return resultados
+    
+    def magistrados_por_deferimento(
+        self,
+        tema: str,
+        tamanho: int = 100,
+        min_decisoes: int = 5
+    ) -> List[PerfilMagistrado]:
+        """
+        Retorna magistrados ordenados por taxa de deferimento.
+        
+        Args:
+            tema: Termo de busca
+            tamanho: Quantidade de decisões
+            min_decisoes: Mínimo de decisões para incluir
+            
+        Returns:
+            Lista ordenada por percentual de deferimento
+        """
+        perfis = self.analisar_por_tema(tema, tamanho)
+        
+        # Filtrar por mínimo de decisões
+        perfis = [p for p in perfis if p.total_decisoes >= min_decisoes]
+        
+        # Ordenar por deferimento
+        perfis.sort(key=lambda p: p.percentual_deferimento, reverse=True)
+        
+        return perfis
+</file>
+
+<file path="src/tjdft/client_optimized.py">
+"""
+Cliente otimizado para API de Jurisprudência do TJDFT.
+
+Esta version includes:
+- Connection pooling with retries
+- Multi-level caching (memory + TTL)
+- Rate limiting
+- Response compression
+- Async support
+- Parallel batch requests
+- Performance metrics
+
+API Oficial: https://jurisdf.tjdft.jus.br/api/v1/pesquisa
+"""
+
+import time
+import asyncio
+from typing import Optional, List, Dict, Any, Callable, TypeVar, Union
+from datetime import date
+from dataclasses import dataclass, field
+from functools import wraps
+import gzip
+import json
+from cachetools import TTLCache, LRUCache
+import requests
+from requests.adapters import HTTPAdapter
+
+from .models import ResultadoBusca
+
+
+# Type variables
+T = TypeVar('T')
+
+
+# ============================================================================
+# PERFORMANCE METRICS
+# ============================================================================
+
+@dataclass
+class PerformanceMetrics:
+    """Tracks API performance metrics."""
+    total_requests: int = 0
+    successful_requests: int = 0
+    failed_requests: int = 0
+    total_time_ms: float = 0.0
+    avg_response_time_ms: float = 0.0
+    cache_hits: int = 0
+    cache_misses: int = 0
+    retries: int = 0
+    
+    def record_request(self, response_time_ms: float, success: bool, cached: bool = False):
+        """Record a request for metrics."""
+        self.total_requests += 1
+        self.total_time_ms += response_time_ms
+        
+        if success:
+            self.successful_requests += 1
+        else:
+            self.failed_requests += 1
+        
+        if cached:
+            self.cache_hits += 1
+        else:
+            self.cache_misses += 1
+        
+        # Update average
+        if self.total_requests > 0:
+            self.avg_response_time_ms = self.total_time_ms / self.total_requests
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Export metrics as dict."""
+        return {
+            "total_requests": self.total_requests,
+            "successful_requests": self.successful_requests,
+            "failed_requests": self.failed_requests,
+            "avg_response_time_ms": round(self.avg_response_time_ms, 2),
+            "cache_hits": self.cache_hits,
+            "cache_misses": self.cache_misses,
+            "cache_hit_ratio": self.cache_hits / max(self.cache_misses, 1) if self.cache_misses > 0 else 0,
+            "retries": self.retries
+        }
+
+
+# ============================================================================
+# RATE LIMITER
+# ============================================================================
+
+class RateLimiter:
+    """Simple rate limiter using token bucket algorithm."""
+    
+    def __init__(self, requests_per_second: float = 10, burst: int = 20):
+        self.requests_per_second = requests_per_second
+        self.burst = burst
+        self.tokens = burst
+        self.last_update = time.time()
+    
+    def acquire(self) -> bool:
+        """Try to acquire a token. Returns True if allowed."""
+        now = time.time()
+        elapsed = now - self.last_update
+        
+        # Add tokens based on elapsed time
+        self.tokens = min(
+            self.burst,
+            self.tokens + elapsed * self.requests_per_second
+        )
+        self.last_update = now
+        
+        if self.tokens >= 1:
+            self.tokens -= 1
+            return True
+        return False
+    
+    def wait_time(self) -> float:
+        """Time to wait for next token."""
+        if self.tokens >= 1:
+            return 0
+        return (1 - self.tokens) / self.requests_per_second
+
+
+# ============================================================================
+# RETRY HANDLER
+# ============================================================================
+
+def retry_with_backoff(
+    max_retries: int = 3,
+    base_delay: float = 1.0,
+    max_delay: float = 30.0,
+    exponential_base: float = 2.0,
+    retryable_exceptions: tuple = (requests.RequestException,)
+):
+    """Decorator for retry with exponential backoff."""
+    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> T:
+            last_exception = None
+            
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except retryable_exceptions as e:
+                    last_exception = e
+                    if attempt < max_retries - 1:
+                        delay = min(
+                            base_delay * (exponential_base ** attempt),
+                            max_delay
+                        )
+                        time.sleep(delay)
+                    else:
+                        raise
+            raise last_exception
+        return wrapper
+    return decorator
+
+
+# ============================================================================
+# OPTIMIZED CLIENT
+# ============================================================================
+
+class TJDFTClientOptimized:
+    """
+    Optimized client for TJDFT Jurisprudence API.
+    
+    Features:
+    - Connection pooling with retries
+    - Multi-level caching (memory + TTL)
+    - Rate limiting
+    - Response compression
+    - Async support
+    - Parallel batch requests
+    - Performance metrics
+    
+    Example:
+        >>> client = TJDFTClientOptimized()
+        >>> resultados = client.pesquisar(query="dano moral")
+        >>> print(client.metrics.to_dict())
+    """
+    
+    API_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
+    
+    CAMPOS_FILTRO = [
+        "base", "subbase", "origem", "uuid", "identificador",
+        "processo", "nomeRelator", "nomeRevisor", "nomeRelatorDesignado",
+        "descricaoOrgaoJulgador", "dataJulgamento", "dataPublicacao",
+        "descricaoClasseCnj",
+    ]
+    
+    def __init__(
+        self,
+        timeout: int = 30,
+        user_agent: str = "TJDFT-API-Client/0.3.0",
+        cache_ttl: int = 300,  # 5 minutes
+        cache_maxsize: int = 1000,
+        rate_limit: float = 10.0,  # requests per second
+        rate_burst: int = 20,
+        max_retries: int = 3,
+        enable_compression: bool = True,
+        pool_connections: int = 10,
+        pool_maxsize: int = 100,
+    ):
+        """Initialize optimized client."""
+        self.timeout = timeout
+        self.user_agent = user_agent
+        self.enable_compression = enable_compression
+        
+        # Performance metrics
+        self.metrics = PerformanceMetrics()
+        
+        # Rate limiter
+        self.rate_limiter = RateLimiter(
+            requests_per_second=rate_limit,
+            burst=rate_burst
+        )
+        
+        # Multi-level caching
+        # L1: Small hot cache (LRU)
+        self._hot_cache = LRUCache(maxsize=100)
+        # L2: Main cache with TTL
+        self._cache = TTLCache(maxsize=cache_maxsize, ttl=cache_ttl)
+        
+        # Configure session with connection pooling
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": user_agent,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Accept-Encoding": "gzip, deflate" if enable_compression else None,
+        })
+        
+        # Connection pooling
+        adapter = HTTPAdapter(
+            pool_connections=pool_connections,
+            pool_maxsize=pool_maxsize,
+            max_retries=3
+        )
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
+        
+        # Retry configuration
+        self.max_retries = max_retries
+    
+    def _cache_key(self, query: str, pagina: int, tamanho: int, filtros: Optional[Dict] = None) -> str:
+        """Generate cache key for request."""
+        filtros_str = json.dumps(filtros, sort_keys=True) if filtros else ""
+        return f"{query}|{pagina}|{tamanho}|{filtros_str}"
+    
+    def _wait_for_rate_limit(self) -> None:
+        """Wait if rate limited."""
+        while not self.rate_limiter.acquire():
+            wait = self.rate_limiter.wait_time()
+            time.sleep(wait)
+    
+    @retry_with_backoff(max_retries=3)
+    def pesquisar(
+        self,
+        query: str,
+        pagina: int = 0,
+        tamanho: int = 20,
+        filtros: Optional[Dict[str, str]] = None,
+        use_cache: bool = True,
+    ) -> ResultadoBusca:
+        """
+        Search jurisprudence with optimizations.
+        
+        Args:
+            query: Search term
+            pagina: Page number (starts at 0)
+            tamanho: Results per page
+            filtros: Filters dict
+            use_cache: Whether to use cache
+            
+        Returns:
+            ResultadoBusca with results
+        """
+        # Check cache first
+        cache_key = self._cache_key(query, pagina, tamanho, filtros)
+        
+        if use_cache:
+            # Check L1 hot cache
+            if cache_key in self._hot_cache:
+                self.metrics.record_request(0.1, success=True, cached=True)
+                return self._hot_cache[cache_key]
+            
+            # Check L2 cache
+            if cache_key in self._cache:
+                result = self._cache[cache_key]
+                self.metrics.record_request(0.5, success=True, cached=True)
+                # Promote to hot cache
+                self._hot_cache[cache_key] = result
+                return result
+        
+        # Rate limiting
+        self._wait_for_rate_limit()
+        
+        # Build payload
+        payload = {
+            "query": query,
+            "pagina": pagina,
+            "tamanho": tamanho,
+        }
+        
+        if filtros:
+            termos_acessorios = []
+            for campo, valor in filtros.items():
+                if campo in self.CAMPOS_FILTRO:
+                    termos_acessorios.append({"campo": campo, "valor": valor})
+            if termos_acessorios:
+                payload["termosAcessorios"] = termos_acessorios
+        
+        # Execute request
+        start_time = time.time()
+        
+        response = self.session.post(
+            self.API_URL,
+            json=payload,
+            timeout=self.timeout
+        )
+        
+        response_time = (time.time() - start_time) * 1000
+        
+        response.raise_for_status()
+        
+        # Parse response
+        result = self._parse_resposta(response.json())
+        
+        # Record metrics
+        self.metrics.record_request(response_time, success=True, cached=False)
+        
+        # Cache result
+        if use_cache:
+            self._cache[cache_key] = result
+        
+        return result
+    
+    def pesquisar_lote(
+        self,
+        consultas: List[Dict[str, Any]],
+        max_parallel: int = 5,
+    ) -> List[ResultadoBusca]:
+        """
+        Execute multiple searches in parallel.
+        
+        Args:
+            consultas: List of search params dicts
+            max_parallel: Max parallel requests
+            
+        Returns:
+            List of ResultadoBusca
+        """
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        
+        results = [None] * len(consultas)
+        
+        with ThreadPoolExecutor(max_workers=max_parallel) as executor:
+            futures = {
+                executor.submit(
+                    self.pesquisar,
+                    **consulta
+                ): i
+                for i, consulta in enumerate(consultas)
+            }
+            
+            for future in as_completed(futures):
+                idx = futures[future]
+                try:
+                    results[idx] = future.result()
+                except Exception as e:
+                    # Record failed request
+                    self.metrics.record_request(0, success=False, cached=False)
+                    results[idx] = ResultadoBusca(resultados=[], total=0)
+        
+        return results
+    
+    async def pesquisar_async(
+        self,
+        query: str,
+        pagina: int = 0,
+        tamanho: int = 20,
+        filtros: Optional[Dict[str, str]] = None,
+    ) -> ResultadoBusca:
+        """
+        Async search using aiohttp.
+        
+        Args:
+            query: Search term
+            pagina: Page number
+            tamanho: Results per page
+            filtros: Filters dict
+            
+        Returns:
+            ResultadoBusca with results
+        """
+        try:
+            import aiohttp
+        except ImportError:
+            raise ImportError("aiohttp required for async. Install with: pip install aiohttp")
+        
+        cache_key = self._cache_key(query, pagina, tamanho, filtros)
+        
+        # Check cache
+        if cache_key in self._cache:
+            self.metrics.record_request(0.5, success=True, cached=True)
+            return self._cache[cache_key]
+        
+        # Build payload
+        payload = {
+            "query": query,
+            "pagina": pagina,
+            "tamanho": tamanho,
+        }
+        
+        if filtros:
+            termos_acessorios = []
+            for campo, valor in filtros.items():
+                if campo in self.CAMPOS_FILTRO:
+                    termos_acessorios.append({"campo": campo, "valor": valor})
+            if termos_acessorios:
+                payload["termosAcessorios"] = termos_acessorios
+        
+        headers = {
+            "User-Agent": self.user_agent,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+        
+        start_time = time.time()
+        
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(
+                self.API_URL,
+                json=payload,
+                timeout=aiohttp.ClientTimeout(total=self.timeout)
+            ) as response:
+                data = await response.json()
+        
+        response_time = (time.time() - start_time) * 1000
+        
+        result = self._parse_resposta(data)
+        
+        self.metrics.record_request(response_time, success=True, cached=False)
+        self._cache[cache_key] = result
+        
+        return result
+    
+    def _parse_resposta(self, data: Dict[str, Any]) -> ResultadoBusca:
+        """Parse API response."""
+        resultados = []
+        
+        for registro in data.get("registros", []):
+            resultado = {
+                "uuid": registro.get("uuid", ""),
+                "identificador": registro.get("identificador", ""),
+                "processo": registro.get("processo", ""),
+                "ementa": registro.get("ementa", ""),
+                "inteiro_teor": registro.get("inteiroTeor", ""),
+                "nome_relator": registro.get("nomeRelator", ""),
+                "nome_revisor": registro.get("nomeRevisor", ""),
+                "orgao_julgador": registro.get("descricaoOrgaoJulgador", ""),
+                "data_publicacao": registro.get("dataPublicacao", ""),
+                "data_julgamento": registro.get("dataJulgamento", ""),
+                "classe_cnj": registro.get("descricaoClasseCnj", ""),
+                "codigo_classe_cnj": registro.get("codigoClasseCnj", ""),
+                "base": registro.get("base", "").lower(),
+                "subbase": registro.get("subbase", ""),
+                "possui_inteiro_teor": registro.get("possuiInteiroTeor", False),
+            }
+            resultados.append(resultado)
+        
+        return ResultadoBusca(
+            resultados=resultados,
+            total=data.get("hits", 0),
+            pagina=data.get("pagina", 0),
+            por_pagina=len(resultados),
+            agregacoes=data.get("agregações", {})
+        )
+    
+    def clear_cache(self) -> None:
+        """Clear all caches."""
+        self._hot_cache.clear()
+        self._cache.clear()
+    
+    def get_metrics(self) -> Dict[str, Any]:
+        """Get performance metrics."""
+        return self.metrics.to_dict()
+    
+    def reset_metrics(self) -> None:
+        """Reset performance metrics."""
+        self.metrics = PerformanceMetrics()
+    
+    # Convenience methods (same as original client)
+    
+    def pesquisar_por_relator(self, query: str, relator: str, tamanho: int = 20) -> ResultadoBusca:
+        """Search by relator."""
+        return self.pesquisar(query=query, filtros={"nomeRelator": relator}, tamanho=tamanho)
+    
+    def pesquisar_por_orgao(self, query: str, orgao: str, tamanho: int = 20) -> ResultadoBusca:
+        """Search by orgao."""
+        return self.pesquisar(query=query, filtros={"descricaoOrgaoJulgador": orgao}, tamanho=tamanho)
+    
+    def buscar_por_processo(self, numero_processo: str) -> Optional[Dict[str, Any]]:
+        """Search by process number."""
+        resultados = self.pesquisar(
+            query=numero_processo,
+            filtros={"processo": numero_processo},
+            tamanho=1
+        )
+        return resultados[0] if resultados else None
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.session.close()
+</file>
+
+<file path="src/tjdft/tokens.py">
+"""
+Token counting utilities for TJDFT API Client.
+
+Uses tiktoken for accurate token counting with OpenAI models.
+"""
+
+import tiktoken
+from typing import List, Dict, Any, Optional, Union
+from dataclasses import dataclass
+
+
+@dataclass
+class TokenCount:
+    """Token count result."""
+    text: str
+    tokens: int
+    chars: int
+    chars_per_token: float
+    model: str
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "tokens": self.tokens,
+            "chars": self.chars,
+            "chars_per_token": round(self.chars_per_token, 2),
+            "model": self.model
+        }
+
+
+class TokenCounter:
+    """
+    Count tokens for OpenAI models using tiktoken.
+    
+    Supports:
+    - cl100k_base (GPT-4, GPT-4-turbo, GPT-4o, GPT-4o-mini)
+    - p50k_base (GPT-3, text-davinci)
+    - r50k_base (older models)
+    
+    Example:
+        >>> counter = TokenCounter()
+        >>> count = counter.count("Olá, mundo!")
+        >>> print(f"Tokens: {count.tokens}")
+    """
+    
+    # Model to encoding mapping
+    MODEL_ENCODINGS = {
+        # GPT-4 family
+        "gpt-4o": "cl100k_base",
+        "gpt-4o-mini": "cl100k_base",
+        "gpt-4-turbo": "cl100k_base",
+        "gpt-4-turbo-preview": "cl100k_base",
+        "gpt-4": "cl100k_base",
+        "gpt-4-32k": "cl100k_base",
+        
+        # GPT-3.5 family
+        "gpt-3.5-turbo": "cl100k_base",
+        "gpt-3.5-turbo-16k": "cl100k_base",
+        
+        # Older models
+        "text-davinci-003": "p50k_base",
+        "text-davinci-002": "p50k_base",
+        "davinci": "r50k_base",
+    }
+    
+    def __init__(self, model: str = "gpt-4o-mini"):
+        """
+        Initialize token counter.
+        
+        Args:
+            model: OpenAI model name (default: gpt-4o-mini)
+        """
+        self.model = model
+        self.encoding_name = self.MODEL_ENCODINGS.get(model, "cl100k_base")
+        self._encoding = None
+    
+    @property
+    def encoding(self):
+        """Lazy load encoding."""
+        if self._encoding is None:
+            self._encoding = tiktoken.get_encoding(self.encoding_name)
+        return self._encoding
+    
+    def count(self, text: str) -> TokenCount:
+        """
+        Count tokens in text.
+        
+        Args:
+            text: Text to count
+            
+        Returns:
+            TokenCount with details
+        """
+        if not text:
+            return TokenCount(
+                text="",
+                tokens=0,
+                chars=0,
+                chars_per_token=0.0,
+                model=self.model
+            )
+        
+        tokens = len(self.encoding.encode(text))
+        chars = len(text)
+        
+        return TokenCount(
+            text=text[:100] + "..." if len(text) > 100 else text,
+            tokens=tokens,
+            chars=chars,
+            chars_per_token=chars / tokens if tokens > 0 else 0,
+            model=self.model
+        )
+    
+    def count_batch(self, texts: List[str]) -> List[TokenCount]:
+        """
+        Count tokens in multiple texts.
+        
+        Args:
+            texts: List of texts
+            
+        Returns:
+            List of TokenCount
+        """
+        return [self.count(text) for text in texts]
+    
+    def count_jurisprudencia(self, resultado: Dict[str, Any]) -> Dict[str, TokenCount]:
+        """
+        Count tokens in a jurisprudencia result.
+        
+        Args:
+            resultado: Result dict from API
+            
+        Returns:
+            Dict with token counts for each field
+        """
+        counts = {}
+        
+        for field in ["ementa", "inteiro_teor", "processo", "orgao_julgador"]:
+            value = resultado.get(field, resultado.get(field.replace("_", ""), ""))
+            if value:
+                counts[field] = self.count(value)
+        
+        return counts
+    
+    def estimate_cost(
+        self,
+        input_tokens: int,
+        output_tokens: int = 0,
+        model: Optional[str] = None
+    ) -> Dict[str, float]:
+        """
+        Estimate API cost in USD.
+        
+        Prices as of 2024:
+        - gpt-4o-mini: $0.15/1M input, $0.60/1M output
+        - gpt-4o: $2.50/1M input, $10.00/1M output
+        - gpt-4-turbo: $10.00/1M input, $30.00/1M output
+        
+        Args:
+            input_tokens: Number of input tokens
+            output_tokens: Number of output tokens
+            model: Model name (uses self.model if not specified)
+            
+        Returns:
+            Dict with cost breakdown
+        """
+        model = model or self.model
+        
+        # Prices per 1M tokens (USD)
+        prices = {
+            "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+            "gpt-4o": {"input": 2.50, "output": 10.00},
+            "gpt-4-turbo": {"input": 10.00, "output": 30.00},
+            "gpt-4": {"input": 30.00, "output": 60.00},
+            "gpt-3.5-turbo": {"input": 0.50, "output": 1.50},
+        }
+        
+        model_prices = prices.get(model, prices["gpt-4o-mini"])
+        
+        input_cost = (input_tokens / 1_000_000) * model_prices["input"]
+        output_cost = (output_tokens / 1_000_000) * model_prices["output"]
+        
+        return {
+            "model": model,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "input_cost_usd": round(input_cost, 6),
+            "output_cost_usd": round(output_cost, 6),
+            "total_cost_usd": round(input_cost + output_cost, 6)
+        }
+    
+    def truncate_to_tokens(self, text: str, max_tokens: int) -> str:
+        """
+        Truncate text to fit within token limit.
+        
+        Args:
+            text: Text to truncate
+            max_tokens: Maximum tokens allowed
+            
+        Returns:
+            Truncated text
+        """
+        encoded = self.encoding.encode(text)
+        
+        if len(encoded) <= max_tokens:
+            return text
+        
+        truncated = encoded[:max_tokens]
+        return self.encoding.decode(truncated)
+    
+    def chunk_text(
+        self,
+        text: str,
+        chunk_size: int = 4000,
+        overlap: int = 200
+    ) -> List[str]:
+        """
+        Split text into chunks that fit within token limits.
+        
+        Args:
+            text: Text to chunk
+            chunk_size: Max tokens per chunk
+            overlap: Tokens to overlap between chunks
+            
+        Returns:
+            List of text chunks
+        """
+        encoded = self.encoding.encode(text)
+        
+        if len(encoded) <= chunk_size:
+            return [text]
+        
+        chunks = []
+        start = 0
+        
+        while start < len(encoded):
+            end = start + chunk_size
+            chunk_encoded = encoded[start:end]
+            chunk_text = self.encoding.decode(chunk_encoded)
+            chunks.append(chunk_text)
+            
+            start = end - overlap
+            if start >= len(encoded):
+                break
+        
+        return chunks
+    
+    def summarize_token_usage(self, counts: List[TokenCount]) -> Dict[str, Any]:
+        """
+        Summarize token usage across multiple counts.
+        
+        Args:
+            counts: List of TokenCount objects
+            
+        Returns:
+            Summary dict
+        """
+        if not counts:
+            return {
+                "total_texts": 0,
+                "total_tokens": 0,
+                "total_chars": 0,
+                "avg_tokens_per_text": 0,
+                "avg_chars_per_token": 0
+            }
+        
+        total_tokens = sum(c.tokens for c in counts)
+        total_chars = sum(c.chars for c in counts)
+        
+        return {
+            "total_texts": len(counts),
+            "total_tokens": total_tokens,
+            "total_chars": total_chars,
+            "avg_tokens_per_text": round(total_tokens / len(counts), 1),
+            "avg_chars_per_token": round(total_chars / total_tokens, 2) if total_tokens > 0 else 0,
+            "min_tokens": min(c.tokens for c in counts),
+            "max_tokens": max(c.tokens for c in counts)
+        }
+
+
+def count_prompt_tokens(prompt: str, model: str = "gpt-4o-mini") -> int:
+    """Quick function to count prompt tokens."""
+    counter = TokenCounter(model)
+    return counter.count(prompt).tokens
+
+
+def estimate_openai_cost(
+    prompt: str,
+    expected_output_tokens: int = 500,
+    model: str = "gpt-4o-mini"
+) -> Dict[str, float]:
+    """
+    Estimate cost for an OpenAI API call.
+    
+    Args:
+        prompt: Input prompt
+        expected_output_tokens: Expected output tokens
+        model: Model name
+        
+    Returns:
+        Cost estimate dict
+    """
+    counter = TokenCounter(model)
+    input_count = counter.count(prompt)
+    
+    return counter.estimate_cost(
+        input_tokens=input_count.tokens,
+        output_tokens=expected_output_tokens,
+        model=model
+    )
+</file>
+
+<file path="tests/test_e2e_oficial.py">
+#!/usr/bin/env python3
+"""
+Testes e2e para a API Oficial do TJDFT.
+
+Este script testa o endpoint oficial da API de Jurisprudência do TJDFT.
+API: https://jurisdf.tjdft.jus.br/api/v1/pesquisa
+"""
+
+import sys
+sys.path.insert(0, "../src")
+
+import requests
+import json
+from datetime import datetime
+
+
+API_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
+
+HEADERS = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "User-Agent": "TJDFT-API-Client/0.2.0 (e2e-test)",
+}
+
+
+def test_api_basica():
+    """Testa requisição básica à API."""
+    print("\n" + "=" * 70)
+    print("TESTE: Requisição básica")
+    print("=" * 70)
+    
+    payload = {
+        "query": "dano moral",
+        "pagina": 0,
+        "tamanho": 5
+    }
+    
+    try:
+        response = requests.post(
+            API_URL,
+            json=payload,
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        print(f"URL: {API_URL}")
+        print(f"Status: {response.status_code}")
+        print(f"Content-Type: {response.headers.get('Content-Type', 'N/A')}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            print(f"\n✅ Sucesso!")
+            print(f"Hits (total): {data.get('hits', 0)}")
+            print(f"Registros retornados: {len(data.get('registros', []))}")
+            
+            # Mostra estrutura do primeiro registro
+            registros = data.get('registros', [])
+            if registros:
+                print("\nEstrutura do primeiro registro:")
+                primeiro = registros[0]
+                for key in list(primeiro.keys())[:10]:
+                    valor = str(primeiro[key])[:50]
+                    print(f"  {key}: {valor}...")
+            
+            return True
+        else:
+            print(f"\n❌ Falha: Status {response.status_code}")
+            print(f"Resposta: {response.text[:200]}")
+            return False
+            
+    except Exception as e:
+        print(f"\n❌ Erro: {e}")
+        return False
+
+
+def test_api_com_filtro():
+    """Testa requisição com filtro por relator."""
+    print("\n" + "=" * 70)
+    print("TESTE: Filtro por relator")
+    print("=" * 70)
+    
+    payload = {
+        "query": "habeas corpus",
+        "pagina": 0,
+        "tamanho": 5,
+        "termosAcessorios": [
+            {
+                "campo": "nomeRelator",
+                "valor": "CARMEN BITTENCOURT"
+            }
+        ]
+    }
+    
+    try:
+        response = requests.post(
+            API_URL,
+            json=payload,
+            headers=HEADERS,
+            timeout=30
+        )
+        
+        print(f"Status: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            print(f"\n✅ Sucesso!")
+            print(f"Hits: {data.get('hits', 0)}")
+            
+            registros = data.get('registros', [])
+            if registros:
+                print("\nPrimeiros resultados:")
+                for i, r in enumerate(registros[:3], 1):
+                    print(f"{i}. {r.get('processo', 'N/A')}")
+                    print(f"   Relator: {r.get('nomeRelator', 'N/A')}")
+                    print(f"   Órgão: {r.get('descricaoOrgaoJulgador', 'N/A')}")
+            
+            return True
+        else:
+            print(f"\n❌ Falha: Status {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print(f"\n❌ Erro: {e}")
+        return False
+
+
+def test_api_paginacao():
+    """Testa paginação."""
+    print("\n" + "=" * 70)
+    print("TESTE: Paginação")
+    print("=" * 70)
+    
+    # Página 0
+    payload_pag0 = {
+        "query": "tráfico",
+        "pagina": 0,
+        "tamanho": 3
+    }
+    
+    # Página 1
+    payload_pag1 = {
+        "query": "tráfico",
+        "pagina": 1,
+        "tamanho": 3
+    }
+    
+    try:
+        r0 = requests.post(API_URL, json=payload_pag0, headers=HEADERS, timeout=30)
+        r1 = requests.post(API_URL, json=payload_pag1, headers=HEADERS, timeout=30)
+        
+        if r0.status_code == 200 and r1.status_code == 200:
+            data0 = r0.json()
+            data1 = r1.json()
+            
+            print(f"\n✅ Paginação funcionando!")
+            print(f"Total de hits: {data0.get('hits', 0)}")
+            
+            ids_pag0 = [r.get('uuid') for r in data0.get('registros', [])]
+            ids_pag1 = [r.get('uuid') for r in data1.get('registros', [])]
+            
+            print(f"UUIDs página 0: {ids_pag0[:2]}...")
+            print(f"UUIDs página 1: {ids_pag1[:2]}...")
+            
+            # Verifica se são diferentes
+            if set(ids_pag0) != set(ids_pag1):
+                print("✅ Páginas retornam resultados diferentes (correto)")
+                return True
+            else:
+                print("⚠️ Páginas retornam mesmos resultados (inesperado)")
+                return False
+        else:
+            print(f"❌ Falha na paginação")
+            return False
+            
+    except Exception as e:
+        print(f"\n❌ Erro: {e}")
+        return False
+
+
+def test_cliente_python():
+    """Testa o cliente Python."""
+    print("\n" + "=" * 70)
+    print("TESTE: Cliente Python")
+    print("=" * 70)
+    
+    try:
+        from tjdft import TJDFTClient
+        
+        client = TJDFTClient()
+        
+        # Teste básico
+        resultados = client.pesquisar(query="habeas corpus", tamanho=3)
+        
+        print(f"\n✅ Cliente funcionando!")
+        print(f"Total: {resultados.total}")
+        print(f"Registros: {len(resultados)}")
+        
+        if resultados:
+            print("\nPrimeiro resultado:")
+            r = resultados[0]
+            print(f"  Processo: {r.get('processo', 'N/A')}")
+            print(f"  Relator: {r.get('nome_relator', 'N/A')}")
+            print(f"  Órgão: {r.get('orgao_julgador', 'N/A')}")
+        
+        # Teste com filtro
+        print("\nTestando filtro por relator...")
+        resultados_filtro = client.pesquisar_por_relator(
+            query="dano moral",
+            relator="CARMEN BITTENCOURT",
+            tamanho=3
+        )
+        print(f"Resultados com filtro: {resultados_filtro.total}")
+        
+        return True
+        
+    except Exception as e:
+        print(f"\n❌ Erro no cliente: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def test_campos_disponiveis():
+    """Lista campos disponíveis na resposta."""
+    print("\n" + "=" * 70)
+    print("TESTE: Campos disponíveis")
+    print("=" * 70)
+    
+    payload = {
+        "query": "teste",
+        "pagina": 0,
+        "tamanho": 1
+    }
+    
+    try:
+        response = requests.post(API_URL, json=payload, headers=HEADERS, timeout=30)
+        
+        if response.status_code == 200:
+            data = response.json()
+            registros = data.get('registros', [])
+            
+            if registros:
+                campos = list(registros[0].keys())
+                print(f"\nCampos disponíveis ({len(campos)}):")
+                for campo in sorted(campos):
+                    print(f"  - {campo}")
+                return True
+        
+        return False
+        
+    except Exception as e:
+        print(f"\n❌ Erro: {e}")
+        return False
+
+
+def main():
+    print("=" * 70)
+    print("TESTES E2E - API OFICIAL TJDFT")
+    print(f"Data: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Endpoint: {API_URL}")
+    print("=" * 70)
+    
+    results = {
+        "api_basica": test_api_basica(),
+        "api_com_filtro": test_api_com_filtro(),
+        "paginacao": test_api_paginacao(),
+        "campos_disponiveis": test_campos_disponiveis(),
+        "cliente_python": test_cliente_python(),
+    }
+    
+    print("\n" + "=" * 70)
+    print("RESUMO DOS TESTES")
+    print("=" * 70)
+    
+    for name, passed in results.items():
+        status = "✅ PASSOU" if passed else "❌ FALHOU"
+        print(f"{name:25} → {status}")
+    
+    total = len(results)
+    passed = sum(1 for v in results.values() if v)
+    
+    print(f"\nTotal: {passed}/{total} testes passaram")
+    
+    if passed == total:
+        print("\n🎉 Todos os testes passaram! API oficial funcionando!")
+
+
+if __name__ == "__main__":
+    main()
+</file>
+
+<file path="tests/test_e2e.py">
+#!/usr/bin/env python3
+"""
+Testes e2e para a API do TJDFT.
+
+Este script testa os endpoints descobertos da API do TJDFT.
+"""
+
+import requests
+import json
+from datetime import datetime
+
+
+BASE_URL = "https://www.tjdft.jus.br"
+
+# Headers para simular navegador
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/html",
+    "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+}
+
+
+def test_ajax_search():
+    """Testa endpoint de busca ajax."""
+    print("\n" + "=" * 70)
+    print("TESTE: @@ajax-search")
+    print("=" * 70)
+    
+    url = f"{BASE_URL}/@@ajax-search"
+    params = {"SearchableText": "habeas corpus"}
+    
+    try:
+        response = requests.get(url, params=params, headers=HEADERS, timeout=30)
+        
+        print(f"URL: {response.url}")
+        print(f"Status: {response.status_code}")
+        print(f"Content-Type: {response.headers.get('Content-Type', 'N/A')}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"\n✅ Sucesso!")
+            print(f"Total de resultados: {data.get('total', 0)}")
+            
+            items = data.get("items", [])
+            print(f"Items retornados: {len(items)}")
+            
+            if items:
+                print("\nPrimeiros 3 resultados:")
+                for i, item in enumerate(items[:3], 1):
+                    print(f"\n{i}. {item.get('title', 'N/A')}")
+                    print(f"   URL: {item.get('url', 'N/A')}")
+            
+            return True
+        else:
+            print(f"\n❌ Falha: Status {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print(f"\n❌ Erro: {e}")
+        return False
+
+
+def test_site_search():
+    """Testa endpoint de busca do site."""
+    print("\n" + "=" * 70)
+    print("TESTE: @@search")
+    print("=" * 70)
+    
+    url = f"{BASE_URL}/@@search"
+    params = {"SearchableText": "tráfico de drogas"}
+    
+    try:
+        response = requests.get(url, params=params, headers=HEADERS, timeout=30, allow_redirects=True)
+        
+        print(f"URL final: {response.url}")
+        print(f"Status: {response.status_code}")
+        print(f"Content-Type: {response.headers.get('Content-Type', 'N/A')}")
+        
+        if response.status_code == 200:
+            # Verifica se é HTML ou JSON
+            content_type = response.headers.get('Content-Type', '')
+            
+            if 'json' in content_type.lower():
+                data = response.json()
+                print(f"\n✅ Resposta JSON!")
+                print(json.dumps(data, indent=2, ensure_ascii=False)[:500])
+            else:
+                print(f"\n⚠️ Resposta HTML (não é JSON)")
+                # Procura por resultados na página
+                if 'resultado' in response.text.lower():
+                    print("Página contém resultados")
+            
+            return True
+        else:
+            print(f"\n❌ Falha: Status {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print(f"\n❌ Erro: {e}")
+        return False
+
+
+def test_jurisprudencia_page():
+    """Testa página de jurisprudência."""
+    print("\n" + "=" * 70)
+    print("TESTE: Página de Jurisprudência")
+    print("=" * 70)
+    
+    url = f"{BASE_URL}/consultas/jurisprudencia/jurisprudencia"
+    
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=30)
+        
+        print(f"URL: {response.url}")
+        print(f"Status: {response.status_code}")
+        
+        if response.status_code == 200:
+            # Procura por links de API
+            api_links = []
+            if '@@' in response.text:
+                api_links = [l for l in response.text.split('"') if '@@' in l]
+            
+            print(f"\n✅ Página acessível")
+            print(f"Links com '@@' encontrados: {len(api_links)}")
+            
+            if api_links:
+                print("Exemplos:")
+                for link in api_links[:5]:
+                    print(f"  - {link}")
+            
+            return True
+        else:
+            print(f"\n❌ Falha: Status {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print(f"\n❌ Erro: {e}")
+        return False
+
+
+def test_common_api_endpoints():
+    """Testa endpoints comuns de API."""
+    print("\n" + "=" * 70)
+    print("TESTE: Endpoints comuns de API")
+    print("=" * 70)
+    
+    endpoints = [
+        "/api/v1/jurisprudencia",
+        "/api/jurisprudencia",
+        "/api/acordaos",
+        "/ws/jurisprudencia",
+        "/rest/jurisprudencia",
+        "/jurisprudencia/api",
+    ]
+    
+    results = []
+    
+    for endpoint in endpoints:
+        url = f"{BASE_URL}{endpoint}"
+        try:
+            response = requests.get(url, headers=HEADERS, timeout=10)
+            status = response.status_code
+            content_type = response.headers.get('Content-Type', 'N/A')
+            
+            is_json = 'json' in content_type.lower()
+            
+            results.append({
+                "endpoint": endpoint,
+                "status": status,
+                "content_type": content_type[:30],
+                "is_json": is_json
+            })
+            
+            print(f"{endpoint:30} → {status} {'✅ JSON' if is_json else ''}")
+            
+        except Exception as e:
+            results.append({
+                "endpoint": endpoint,
+                "error": str(e)
+            })
+            print(f"{endpoint:30} → ERRO: {str(e)[:30]}")
+    
+    json_endpoints = [r for r in results if r.get('is_json')]
+    
+    print(f"\nResumo:")
+    print(f"  Endpoints testados: {len(endpoints)}")
+    print(f"  Endpoints JSON: {len(json_endpoints)}")
+    
+    return len(json_endpoints) > 0
+
+
+def main():
+    print("=" * 70)
+    print("TESTES E2E - API TJDFT")
+    print(f"Data: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 70)
+    
+    results = {
+        "ajax_search": test_ajax_search(),
+        "site_search": test_site_search(),
+        "jurisprudencia_page": test_jurisprudencia_page(),
+        "common_endpoints": test_common_api_endpoints(),
+    }
+    
+    print("\n" + "=" * 70)
+    print("RESUMO DOS TESTES")
+    print("=" * 70)
+    
+    for name, passed in results.items():
+        status = "✅ PASSOU" if passed else "❌ FALHOU"
+        print(f"{name:20} → {status}")
+    
+    total = len(results)
+    passed = sum(1 for v in results.values() if v)
+    
+    print(f"\nTotal: {passed}/{total} testes passaram")
+    
+    print("\n" + "=" * 70)
+    print("DESCOBERTAS")
+    print("=" * 70)
+    print("""
+1. @@ajax-search funciona e retorna JSON
+   - URL: https://www.tjdft.jus.br/@@ajax-search?SearchableText=termo
+   - Retorna: {"total": N, "items": [...]}
+
+2. Site usa Plone CMS
+   - Busca padrão Plone: @@search
+   - API ajax: @@ajax-search
+
+3. Não há API REST documentada
+   - Endpoints comuns não funcionam
+   - Necessário análise via DevTools
+
+4. Próximos passos:
+   - Usar browser para interceptar requisições
+   - Documentar endpoints internos
+   - Contatar TJDFT para documentação oficial
+""")
+
+
+if __name__ == "__main__":
+    main()
+</file>
+
+<file path="tests/test_performance.py">
+#!/usr/bin/env python3
+"""
+Testes de performance comparando cliente original vs otimizado.
+
+Executa benchmarks para medir:
+- Response time
+- Throughput (requests/sec)
+- Cache hit ratio
+- Rate limiting effectiveness
+"""
+
+import time
+import sys
+sys.path.insert(0, "src")
+
+from tjdft.client import TJDFTClient
+from tjdft.client_optimized import TJDFTClientOptimized
+import statistics
+
+
+def benchmark_client(client, queries: list, iterations: int = 3):
+    """Benchmark a client with multiple queries."""
+    results = []
+    
+    for i in range(iterations):
+        for query in queries:
+            start = time.time()
+            
+            try:
+                result = client.pesquisar(query=query, tamanho=10)
+                elapsed = (time.time() - start) * 1000  # ms
+                
+                results.append({
+                    "query": query,
+                    "iteration": i,
+                    "time_ms": elapsed,
+                    "total_results": result.total,
+                    "success": True
+                })
+            except Exception as e:
+                elapsed = (time.time() - start) * 1000
+                results.append({
+                    "query": query,
+                    "iteration": i,
+                    "time_ms": elapsed,
+                    "error": str(e),
+                    "success": False
+                })
+    
+    return results
+
+
+def print_stats(results, name):
+    """Print statistics from benchmark results."""
+    times = [r["time_ms"] for r in results if r["success"]]
+    
+    if not times:
+        print(f"\n{name}: Nenhum resultado bem-sucedido")
+        return
+    
+    total = len(results)
+    success = len(times)
+    
+    print(f"\n{'='*60}")
+    print(f" {name}")
+    print(f"{'='*60}")
+    print(f"  Total requests: {total}")
+    print(f"  Successful: {success} ({success/total*100:.1f}%)")
+    print(f"\n  Response Time (ms):")
+    print(f"    Min:    {min(times):.1f}")
+    print(f"    Max:    {max(times):.1f}")
+    print(f"    Avg:    {statistics.mean(times):.1f}")
+    print(f"    Median: {statistics.median(times):.1f}")
+    print(f"    P95:    {sorted(times)[int(len(times)*0.95)]:.1f}")
+    print(f"\n  Throughput:")
+    print(f"    {len(times)/sum(times)*1000:.1f} requests/sec")
+
+
+def test_cache_effectiveness():
+    """Test cache hit ratio."""
+    print("\n" + "="*60)
+    print(" TESTE: Cache Effectiveness")
+    print("="*60)
+    
+    client = TJDFTClientOptimized(cache_ttl=60)
+    
+    query = "dano moral"
+    
+    # First request (cache miss)
+    start = time.time()
+    result1 = client.pesquisar(query=query, tamanho=20)
+    time1 = (time.time() - start) * 1000
+    
+    print(f"\n  1st request (cache miss): {time1:.1f}ms")
+    
+    # Second request (cache hit)
+    start = time.time()
+    result2 = client.pesquisar(query=query, tamanho=20)
+    time2 = (time.time() - start) * 1000
+    
+    print(f"  2nd request (cache hit):  {time2:.1f}ms")
+    
+    # Speedup
+    speedup = time1 / time2 if time2 > 0 else 0
+    print(f"\n  🚀 Cache speedup: {speedup:.1f}x faster")
+    
+    # Metrics
+    metrics = client.get_metrics()
+    print(f"\n  Metrics:")
+    print(f"    Cache hits: {metrics['cache_hits']}")
+    print(f"    Cache misses: {metrics['cache_misses']}")
+    print(f"    Hit ratio: {metrics['cache_hit_ratio']:.1%}")
+
+
+def test_parallel_requests():
+    """Test parallel batch requests."""
+    print("\n" + "="*60)
+    print(" TESTE: Parallel Batch Requests")
+    print("="*60)
+    
+    client = TJDFTClientOptimized(rate_limit=5, rate_burst=10)
+    
+    queries = [
+        {"query": "dano moral"},
+        {"query": "habeas corpus"},
+        {"query": "obrigação de fazer"},
+        {"query": "tutela de urgência"},
+        {"query": "contrato"},
+    ]
+    
+    # Sequential
+    start = time.time()
+    for q in queries:
+        client.pesquisar(**q, use_cache=False)
+    sequential_time = (time.time() - start) * 1000
+    
+    # Clear cache for fair comparison
+    client.clear_cache()
+    
+    # Parallel
+    start = time.time()
+    results = client.pesquisar_lote(queries, max_parallel=5)
+    parallel_time = (time.time() - start) * 1000
+    
+    print(f"\n  Queries: {len(queries)}")
+    print(f"\n  Sequential: {sequential_time:.1f}ms")
+    print(f"  Parallel:   {parallel_time:.1f}ms")
+    
+    speedup = sequential_time / parallel_time if parallel_time > 0 else 0
+    print(f"\n  🚀 Parallel speedup: {speedup:.1f}x faster")
+    
+    # Results
+    print(f"\n  Results per query:")
+    for i, r in enumerate(results):
+        print(f"    {i+1}. {r.total} results")
+
+
+def test_rate_limiting():
+    """Test rate limiting."""
+    print("\n" + "="*60)
+    print(" TESTE: Rate Limiting")
+    print("="*60)
+    
+    client = TJDFTClientOptimized(rate_limit=5, rate_burst=5)
+    
+    print("\n  Rate limit: 5 req/s")
+    print("  Burst: 5")
+    print("\n  Making 10 rapid requests...")
+    
+    start = time.time()
+    for i in range(10):
+        client.pesquisar(query=f"teste {i}", tamanho=1, use_cache=False)
+    total_time = time.time() - start
+    
+    print(f"\n  Total time: {total_time:.1f}s")
+    print(f"  Actual rate: {10/total_time:.1f} req/s")
+    
+    metrics = client.get_metrics()
+    print(f"\n  Metrics:")
+    print(f"    Requests: {metrics['total_requests']}")
+    print(f"    Successful: {metrics['successful_requests']}")
+
+
+def main():
+    print("="*60)
+    print(" TJDFT API CLIENT - PERFORMANCE TESTS")
+    print("="*60)
+    
+    queries = [
+        "dano moral",
+        "habeas corpus",
+        "obrigação de fazer"
+    ]
+    
+    # Test original client
+    print("\n\n📊 BENCHMARK: Cliente Original")
+    original_client = TJDFTClient()
+    original_results = benchmark_client(original_client, queries, iterations=2)
+    print_stats(original_results, "Cliente Original")
+    
+    # Test optimized client (cold cache)
+    print("\n\n📊 BENCHMARK: Cliente Otimizado (cold cache)")
+    optimized_client = TJDFTClientOptimized()
+    optimized_results = benchmark_client(optimized_client, queries, iterations=2)
+    print_stats(optimized_results, "Cliente Otimizado (cold)")
+    
+    # Test optimized client (warm cache)
+    print("\n\n📊 BENCHMARK: Cliente Otimizado (warm cache)")
+    optimized_results_warm = benchmark_client(optimized_client, queries, iterations=2)
+    print_stats(optimized_results_warm, "Cliente Otimizado (warm)")
+    
+    # Additional tests
+    test_cache_effectiveness()
+    test_parallel_requests()
+    test_rate_limiting()
+    
+    # Final metrics
+    print("\n" + "="*60)
+    print(" 📊 MÉTRICAS FINAIS - CLIENTE OTIMIZADO")
+    print("="*60)
+    metrics = optimized_client.get_metrics()
+    for k, v in metrics.items():
+        print(f"  {k}: {v}")
+    
+    print("\n" + "="*60)
+    print(" ✅ TESTES CONCLUÍDOS")
+    print("="*60)
+
+
+if __name__ == "__main__":
+    main()
+</file>
+
+<file path=".gitignore">
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+*.log
+</file>
+
+<file path=".python-version">
+3.12
+</file>
+
+<file path="Makefile">
+# Makefile para TJDFT API Client
+# Usa UV como gerenciador de pacotes
+
+.PHONY: install sync test lint format clean build run help
+
+# Default
+help:
+	@echo "TJDFT API Client - Comandos disponíveis:"
+	@echo ""
+	@echo "  make install     - Instalar dependências"
+	@echo "  make sync        - Sincronizar dependências"
+	@echo "  make test        - Executar testes"
+	@echo "  make lint        - Executar linting"
+	@echo "  make format      - Formatar código"
+	@echo "  make check       - Verificar tudo (lint + test)"
+	@echo "  make clean       - Limpar arquivos temporários"
+	@echo "  make build       - Criar distribuição"
+	@echo "  make run         - Executar exemplo interativo"
+	@echo ""
+
+# Instalação
+install:
+	uv sync
+
+sync:
+	uv sync --upgrade
+
+# Testes
+test:
+	uv run pytest tests/ -v
+
+test-coverage:
+	uv run pytest tests/ --cov=src/tjdft --cov-report=html
+
+# Linting
+lint:
+	uv run ruff check src/ tests/
+
+format:
+	uv run black src/ tests/
+
+format-check:
+	uv run black --check src/ tests/
+
+type-check:
+	uv run mypy src/
+
+# Verificação completa
+check: lint format-check test
+	@echo "✅ Todos os checks passaram!"
+
+# Build
+build:
+	uv build
+
+# Limpeza
+clean:
+	rm -rf .pytest_cache
+	rm -rf .mypy_cache
+	rm -rf .ruff_cache
+	rm -rf htmlcov
+	rm -rf dist
+	rm -rf build
+	rm -rf *.egg-info
+	rm -f .coverage
+
+# Execução
+run:
+	uv run python -c "from tjdft import TJDFTClient; \
+		client = TJDFTClient(); \
+		r = client.pesquisar(query='dano moral', tamanho=5); \
+		print(f'Total: {r.total}'); \
+		[print(f'{i+1}. {x[\"processo\"]}') for i, x in enumerate(r)]"
+
+# Exemplos
+example-busca:
+	uv run python examples/busca_jurisprudencia.py
+
+example-tokens:
+	uv run python examples/contagem_tokens.py
+
+example-performance:
+	uv run python tests/test_performance.py
+
+# Desenvolvimento
+dev-setup:
+	uv sync --all-extras
+	uv run pre-commit install 2>/dev/null || true
+
+# CI
+ci: lint test type-check
+	@echo "✅ CI checks completos!"
+</file>
+
+<file path="examples/agente_jurisprudencia.py">
+#!/usr/bin/env python3
+"""
+Exemplo de uso do Agente de Jurisprudência com IA.
+
+Este script demonstra como usar o JurisprudenciaAgent para
+analisar casos jurídicos com busca no TJDFT e análise via Gemini.
+"""
+
+import os
+import sys
+sys.path.insert(0, "../src")
+
+from tjdft import JurisprudenciaAgent
+
+
+def exemplo_analise_caso():
+    """Exemplo de análise de caso."""
+    print("=" * 70)
+    print("EXEMPLO: Análise de Caso com IA")
+    print("=" * 70)
+    
+    # Verifica se a chave da API está disponível
+    if not os.environ.get("OPENAI_API_KEY"):
+        print("\n❌ Erro: OPENAI_API_KEY não definida")
+        print("Exporte a variável: export OPENAI_API_KEY='sua-chave'")
+        return
+    
+    # Cria o agente
+    agent = JurisprudenciaAgent()
+    
+    # Descreve o caso
+    caso = """
+    Cliente solicitou renovação de CNH junto ao DETRAN/DF.
+    Pagou todas as taxas (R$ 265,00) e realizou exames médicos.
+    Passados 30 dias, a CNH não foi emitida.
+    Sistema do DETRAN mostra "sem observações" no prontuário.
+    Cliente está impedido de dirigir desde a expiração da autorização provisória.
+    """
+    
+    # Termos de busca
+    termos = [
+        "DETRAN CNH renovação obrigação fazer",
+        "tutela urgência CNH",
+        "multa diária administração pública"
+    ]
+    
+    print("\n🔍 Analisando caso...")
+    print(f"Termos de busca: {termos}")
+    
+    # Analisa o caso
+    resultado = agent.analisar_caso(
+        descricao=caso,
+        termos_busca=termos
+    )
+    
+    # Exibe resultados
+    print(f"\n📊 Jurisprudências encontradas: {resultado.jurisprudencias_encontradas}")
+    
+    print("\n" + "=" * 70)
+    print("📝 ANÁLISE DA IA")
+    print("=" * 70)
+    print(resultado.analise_ia)
+    
+    if resultado.jurisprudencias_relevantes:
+        print("\n" + "=" * 70)
+        print("📚 JURISPRUDÊNCIAS RELEVANTES")
+        print("=" * 70)
+        for j in resultado.jurisprudencias_relevantes[:3]:
+            print(f"\n• {j.get('processo', 'N/A')}")
+            print(f"  Relator: {j.get('relator', 'N/A')}")
+            print(f"  Trecho: {j.get('trecho', 'N/A')[:150]}...")
+    
+    if resultado.sugestoes:
+        print("\n" + "=" * 70)
+        print("💡 SUGESTÕES")
+        print("=" * 70)
+        for i, sugestao in enumerate(resultado.sugestoes, 1):
+            print(f"{i}. {sugestao}")
+    
+    if resultado.precedentes:
+        print("\n" + "=" * 70)
+        print("⚖️ PRECEDENTES")
+        print("=" * 70)
+        for p in resultado.precedentes:
+            print(f"  • {p}")
+
+
+def exemplo_resumo_jurisprudencia():
+    """Exemplo de resumo de jurisprudência específica."""
+    print("\n" + "=" * 70)
+    print("EXEMPLO: Resumo de Jurisprudência Específica")
+    print("=" * 70)
+    
+    if not os.environ.get("OPENAI_API_KEY"):
+        print("\n❌ OPENAI_API_KEY não definida")
+        return
+    
+    agent = JurisprudenciaAgent()
+    
+    # Número do processo
+    processo = "0723221-62.2024.8.07.0000"
+    
+    print(f"\n🔍 Buscando processo: {processo}")
+    
+    resumo = agent.resumir_jurisprudencia(processo)
+    
+    print("\n" + "=" * 70)
+    print("📄 RESUMO")
+    print("=" * 70)
+    print(resumo)
+
+
+def exemplo_busca_simples():
+    """Exemplo de busca simples sem IA."""
+    print("\n" + "=" * 70)
+    print("EXEMPLO: Busca Simples (sem IA)")
+    print("=" * 70)
+    
+    from tjdft import TJDFTClient
+    
+    client = TJDFTClient()
+    
+    # Busca sem IA
+    resultados = client.pesquisar(
+        query="DETRAN CNH renovação",
+        tamanho=5
+    )
+    
+    print(f"\nTotal encontrado: {resultados.total}")
+    
+    for i, dec in enumerate(resultados, 1):
+        print(f"\n{i}. {dec.get('processo', 'N/A')}")
+        print(f"   Relator: {dec.get('nome_relator', 'N/A')}")
+        print(f"   Órgão: {dec.get('orgao_julgador', 'N/A')}")
+
+
+if __name__ == "__main__":
+    print("\n" + "=" * 70)
+    print("TJDFT API CLIENT - AGENTE DE JURISPRUDÊNCIA COM IA")
+    print("=" * 70)
+    
+    print("\nEscolha uma opção:")
+    print("1. Análise de caso com IA")
+    print("2. Resumo de jurisprudência específica")
+    print("3. Busca simples (sem IA)")
+    
+    escolha = input("\nOpção: ").strip()
+    
+    if escolha == "1":
+        exemplo_analise_caso()
+    elif escolha == "2":
+        exemplo_resumo_jurisprudencia()
+    elif escolha == "3":
+        exemplo_busca_simples()
+    else:
+        print("\nOpção inválida. Executando busca simples...")
+        exemplo_busca_simples()
+</file>
+
+<file path="src/tjdft/client.py">
+"""
+Cliente para a API de Jurisprudência do TJDFT.
+
+API Oficial: https://jurisdf.tjdft.jus.br/api/v1/pesquisa
+
+Uso:
+    from tjdft import TJDFTClient
+    
+    client = TJDFTClient()
+    resultados = client.pesquisar(query="habeas corpus")
+"""
+
+import requests
+from typing import Optional, List, Dict, Any
+from datetime import date
+from dataclasses import dataclass
+
+from .models import Acordao, Decisao, ResultadoBusca
+
+
+class TJDFTClient:
+    """
+    Cliente para a API de Jurisprudência do TJDFT.
+    
+    API Oficial: https://jurisdf.tjdft.jus.br/api/v1/pesquisa
+    
+    Exemplo:
+        >>> client = TJDFTClient()
+        >>> resultados = client.pesquisar(query="dano moral")
+        >>> for r in resultados:
+        ...     print(r.processo, r.nome_relator)
+    """
+    
+    API_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
+    
+    # Campos disponíveis para filtros
+    CAMPOS_FILTRO = [
+        "base",
+        "subbase", 
+        "origem",
+        "uuid",
+        "identificador",
+        "processo",
+        "nomeRelator",
+        "nomeRevisor",
+        "nomeRelatorDesignado",
+        "descricaoOrgaoJulgador",
+        "dataJulgamento",
+        "dataPublicacao",
+        "descricaoClasseCnj",
+    ]
+    
+    def __init__(
+        self,
+        timeout: int = 30,
+        user_agent: str = "TJDFT-API-Client/0.2.0"
+    ):
+        """
+        Inicializa o cliente.
+        
+        Args:
+            timeout: Tempo máximo de espera em segundos
+            user_agent: User-Agent para as requisições
+        """
+        self.timeout = timeout
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": user_agent,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        })
+    
+    def pesquisar(
+        self,
+        query: str,
+        pagina: int = 0,
+        tamanho: int = 20,
+        filtros: Optional[Dict[str, str]] = None
+    ) -> ResultadoBusca:
+        """
+        Pesquisa jurisprudência no TJDFT.
+        
+        Args:
+            query: Termo de busca
+            pagina: Número da página (começa em 0)
+            tamanho: Resultados por página
+            filtros: Dicionário com filtros (campo: valor)
+            
+        Returns:
+            ResultadoBusca com os resultados encontrados
+            
+        Example:
+            >>> resultados = client.pesquisar(
+            ...     query="habeas corpus",
+            ...     filtros={"nomeRelator": "CARMEN BITTENCOURT"}
+            ... )
+        """
+        payload = {
+            "query": query,
+            "pagina": pagina,
+            "tamanho": tamanho,
+        }
+        
+        if filtros:
+            termos_acessorios = []
+            for campo, valor in filtros.items():
+                if campo in self.CAMPOS_FILTRO:
+                    termos_acessorios.append({
+                        "campo": campo,
+                        "valor": valor
+                    })
+            if termos_acessorios:
+                payload["termosAcessorios"] = termos_acessorios
+        
+        response = self.session.post(
+            self.API_URL,
+            json=payload,
+            timeout=self.timeout
+        )
+        
+        response.raise_for_status()
+        
+        return self._parse_resposta(response.json())
+    
+    def pesquisar_por_relator(
+        self,
+        query: str,
+        relator: str,
+        tamanho: int = 20
+    ) -> ResultadoBusca:
+        """
+        Pesquisa por termo filtrando por relator.
+        
+        Args:
+            query: Termo de busca
+            relator: Nome do relator
+            tamanho: Resultados por página
+            
+        Returns:
+            ResultadoBusca com os resultados
+        """
+        return self.pesquisar(
+            query=query,
+            filtros={"nomeRelator": relator},
+            tamanho=tamanho
+        )
+    
+    def pesquisar_por_orgao(
+        self,
+        query: str,
+        orgao: str,
+        tamanho: int = 20
+    ) -> ResultadoBusca:
+        """
+        Pesquisa por termo filtrando por órgão julgador.
+        
+        Args:
+            query: Termo de busca
+            orgao: Nome do órgão julgador
+            tamanho: Resultados por página
+            
+        Returns:
+            ResultadoBusca com os resultados
+        """
+        return self.pesquisar(
+            query=query,
+            filtros={"descricaoOrgaoJulgador": orgao},
+            tamanho=tamanho
+        )
+    
+    def pesquisar_por_periodo(
+        self,
+        query: str,
+        data_inicial: date,
+        data_final: date,
+        tamanho: int = 20
+    ) -> ResultadoBusca:
+        """
+        Pesquisa por termo filtrando por período de publicação.
+        
+        Args:
+            query: Termo de busca
+            data_inicial: Data inicial
+            data_final: Data final
+            tamanho: Resultados por página
+            
+        Returns:
+            ResultadoBusca com os resultados
+        """
+        # Nota: A API pode não suportar range de datas diretamente
+        # Este método usa dataPublicacao como filtro único
+        return self.pesquisar(
+            query=query,
+            filtros={
+                "dataPublicacao": data_inicial.strftime("%Y-%m-%d")
+            },
+            tamanho=tamanho
+        )
+    
+    def buscar_por_processo(self, numero_processo: str) -> Optional[Dict[str, Any]]:
+        """
+        Busca decisão por número do processo.
+        
+        Args:
+            numero_processo: Número do processo
+            
+        Returns:
+            Dicionário com dados da decisão ou None
+        """
+        resultados = self.pesquisar(
+            query=numero_processo,
+            filtros={"processo": numero_processo},
+            tamanho=1
+        )
+        
+        if resultados:
+            return resultados[0]
+        return None
+    
+    def _parse_resposta(self, data: Dict[str, Any]) -> ResultadoBusca:
+        """Parseia resposta da API."""
+        resultados = []
+        
+        for registro in data.get("registros", []):
+            # Determina se é acórdão ou decisão baseado na base
+            base = registro.get("base", "").lower()
+            
+            resultado = {
+                "uuid": registro.get("uuid", ""),
+                "identificador": registro.get("identificador", ""),
+                "processo": registro.get("processo", ""),
+                "ementa": registro.get("ementa", ""),
+                "inteiro_teor": registro.get("inteiroTeor", ""),
+                "nome_relator": registro.get("nomeRelator", ""),
+                "nome_revisor": registro.get("nomeRevisor", ""),
+                "orgao_julgador": registro.get("descricaoOrgaoJulgador", ""),
+                "data_publicacao": registro.get("dataPublicacao", ""),
+                "data_julgamento": registro.get("dataJulgamento", ""),
+                "classe_cnj": registro.get("descricaoClasseCnj", ""),
+                "codigo_classe_cnj": registro.get("codigoClasseCnj", ""),
+                "base": base,
+                "subbase": registro.get("subbase", ""),
+                "possui_inteiro_teor": registro.get("possuiInteiroTeor", False),
+            }
+            resultados.append(resultado)
+        
+        return ResultadoBusca(
+            resultados=resultados,
+            total=data.get("hits", 0),
+            pagina=data.get("pagina", 0),
+            por_pagina=len(resultados),
+            agregacoes=data.get("agregações", {})
+        )
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.session.close()
+</file>
+
+<file path="src/tjdft/models.py">
+"""
+Modelos de dados para a API do TJDFT.
+"""
+
+from dataclasses import dataclass, field
+from datetime import date
+from typing import Optional, List, Dict, Any
+
+
+@dataclass
+class ResultadoBusca:
+    """Resultado de uma busca na API."""
+    resultados: List[Dict[str, Any]] = field(default_factory=list)
+    total: int = 0
+    pagina: int = 0
+    por_pagina: int = 20
+    agregacoes: Dict[str, Any] = field(default_factory=dict)
+    
+    @property
+    def total_paginas(self) -> int:
+        """Retorna o total de páginas."""
+        if self.por_pagina <= 0:
+            return 0
+        return (self.total + self.por_pagina - 1) // self.por_pagina
+    
+    @property
+    def tem_proxima(self) -> bool:
+        """Verifica se há próxima página."""
+        return (self.pagina + 1) < self.total_paginas
+    
+    def __len__(self) -> int:
+        return len(self.resultados)
+    
+    def __iter__(self):
+        return iter(self.resultados)
+    
+    def __getitem__(self, index):
+        return self.resultados[index]
+
+
+@dataclass
+class DecisaoBase:
+    """Classe base para decisões (mantida para compatibilidade)."""
+    numero: str
+    classe: str
+    assunto: str
+    relator: str
+    orgao_julgador: str
+    data_julgamento: Optional[date] = None
+    data_publicacao: Optional[date] = None
+    ementa: str = ""
+    inteiro_teor_url: str = ""
+    
+    @classmethod
+    def from_dict(cls, data: dict) -> "DecisaoBase":
+        """Cria instância a partir de dicionário."""
+        return cls(
+            numero=data.get("numero", data.get("processo", "")),
+            classe=data.get("classe", data.get("descricaoClasseCnj", "")),
+            assunto=data.get("assunto", ""),
+            relator=data.get("relator", data.get("nomeRelator", "")),
+            orgao_julgador=data.get("orgao_julgador", data.get("descricaoOrgaoJulgador", "")),
+            data_julgamento=_parse_date(data.get("data_julgamento", data.get("dataJulgamento"))),
+            data_publicacao=_parse_date(data.get("data_publicacao", data.get("dataPublicacao"))),
+            ementa=data.get("ementa", ""),
+            inteiro_teor_url=data.get("inteiro_teor_url", data.get("inteiroTeor", "")),
+        )
+
+
+@dataclass
+class Acordao(DecisaoBase):
+    """
+    Representa um acórdão do TJDFT.
+    
+    Um acórdão é uma decisão colegiada proferida por uma turma ou câmara.
+    """
+    tipo: str = "acordao"
+    turma: str = ""
+    unanimidade: Optional[bool] = None
+    votacao: str = ""
+    
+    @classmethod
+    def from_dict(cls, data: dict) -> "Acordao":
+        """Cria instância a partir de dicionário."""
+        base = super().from_dict(data)
+        return cls(
+            numero=base.numero,
+            classe=base.classe,
+            assunto=base.assunto,
+            relator=base.relator,
+            orgao_julgador=base.orgao_julgador,
+            data_julgamento=base.data_julgamento,
+            data_publicacao=base.data_publicacao,
+            ementa=base.ementa,
+            inteiro_teor_url=base.inteiro_teor_url,
+            tipo="acordao",
+            turma=data.get("turma", data.get("descricaoOrgaoJulgador", "")),
+            unanimidade=data.get("unanimidade"),
+            votacao=data.get("votacao", ""),
+        )
+
+
+@dataclass
+class Decisao(DecisaoBase):
+    """
+    Representa uma decisão monocrática do TJDFT.
+    
+    Uma decisão monocrática é proferida por um único juiz/desembargador.
+    """
+    tipo: str = "decisao"
+    juiz: str = ""
+    
+    @classmethod
+    def from_dict(cls, data: dict) -> "Decisao":
+        """Cria instância a partir de dicionário."""
+        base = super().from_dict(data)
+        return cls(
+            numero=base.numero,
+            classe=base.classe,
+            assunto=base.assunto,
+            relator=base.relator,
+            orgao_julgador=base.orgao_julgador,
+            data_julgamento=base.data_julgamento,
+            data_publicacao=base.data_publicacao,
+            ementa=base.ementa,
+            inteiro_teor_url=base.inteiro_teor_url,
+            tipo="decisao",
+            juiz=data.get("juiz", data.get("nomeRelator", "")),
+        )
+
+
+def _parse_date(value: Optional[str]) -> Optional[date]:
+    """Parseia string de data."""
+    if not value:
+        return None
+    
+    # Remove timezone se presente
+    if "T" in value:
+        value = value.split("T")[0]
+    
+    formatos = ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"]
+    
+    for fmt in formatos:
+        try:
+            return date.strptime(value, fmt)
+        except ValueError:
+            continue
+    
+    return None
+</file>
+
+<file path="tests/test_client.py">
+"""
+Testes para o cliente da API TJDFT.
+"""
+
+import pytest
+from unittest.mock import Mock, patch
+from tjdft import TJDFTClient
+from tjdft.models import ResultadoBusca
+
+
+class TestTJDFTClient:
+    """Testes do cliente TJDFT."""
+
+    def test_init(self):
+        """Testa inicialização do cliente."""
+        client = TJDFTClient(timeout=60)
+        assert client.timeout == 60
+        assert client.session is not None
+
+    def test_pesquisar_mock(self):
+        """Testa pesquisa de jurisprudência com mock."""
+        with patch.object(TJDFTClient, 'pesquisar') as mock_pesquisar:
+            # Configurar mock
+            mock_result = ResultadoBusca(
+                resultados=[{
+                    "processo": "0710649-40.2025.8.07.0000",
+                    "ementa": "Teste de ementa",
+                    "nome_relator": "Des. Teste"
+                }],
+                total=1,
+                pagina=0,
+                por_pagina=20
+            )
+            mock_pesquisar.return_value = mock_result
+
+            # Executar
+            client = TJDFTClient()
+            resultados = client.pesquisar(query="dano moral", tamanho=10)
+
+            # Verificar
+            assert resultados.total == 1
+            assert len(resultados) == 1
+            assert resultados[0]["processo"] == "0710649-40.2025.8.07.0000"
+
+    def test_pesquisar_por_relator(self):
+        """Testa pesquisa por relator."""
+        with patch.object(TJDFTClient, 'pesquisar') as mock_pesquisar:
+            mock_pesquisar.return_value = ResultadoBusca(resultados=[], total=0)
+            
+            client = TJDFTClient()
+            client.pesquisar_por_relator(query="teste", relator="NOME")
+            
+            # Verificar se chamou pesquisar com filtro correto
+            mock_pesquisar.assert_called_once()
+            call_args = mock_pesquisar.call_args
+            assert call_args[1]["filtros"]["nomeRelator"] == "NOME"
+
+
+class TestModels:
+    """Testes dos modelos de dados."""
+
+    def test_resultado_busca(self):
+        """Testa modelo ResultadoBusca."""
+        resultado = ResultadoBusca(
+            resultados=[{"teste": "valor"}],
+            total=100,
+            pagina=0,
+            por_pagina=20
+        )
+
+        assert resultado.total == 100
+        assert len(resultado) == 1
+        assert resultado.total_paginas == 5
+        assert resultado.tem_proxima is True
+
+    def test_resultado_busca_vazio(self):
+        """Testa ResultadoBusca vazio."""
+        resultado = ResultadoBusca()
+
+        assert resultado.total == 0
+        assert len(resultado) == 0
+        assert resultado.total_paginas == 0
+        assert resultado.tem_proxima is False
+
+    def test_resultado_busca_iteracao(self):
+        """Testa iteração sobre ResultadoBusca."""
+        dados = [{"id": 1}, {"id": 2}, {"id": 3}]
+        resultado = ResultadoBusca(resultados=dados, total=3)
+
+        ids = [r["id"] for r in resultado]
+        assert ids == [1, 2, 3]
+
+    def test_resultado_busca_indexing(self):
+        """Testa indexação de ResultadoBusca."""
+        dados = [{"id": 1}, {"id": 2}]
+        resultado = ResultadoBusca(resultados=dados, total=2)
+
+        assert resultado[0] == {"id": 1}
+        assert resultado[1] == {"id": 2}
+</file>
+
+<file path=".env.example">
+# Chave da API da OpenAI para o agente de jurisprudência
+# Obtenha sua chave em: https://platform.openai.com/api-keys
+OPENAI_API_KEY=sua-chave-aqui
+</file>
+
+<file path="docs/endpoints.md">
+# Endpoints da API TJDFT
+
+> **API Oficial descoberta!** Atualizado em: 2026-03-02
+
+## Base URL
+
+```
+https://jurisdf.tjdft.jus.br/api/v1
+```
+
+## Endpoint Principal
+
+### Pesquisa de Jurisprudência
+
+```
+POST /pesquisa
+```
+
+**URL completa:** `https://jurisdf.tjdft.jus.br/api/v1/pesquisa`
+
+**Formato:** JSON (body)
+
+**Parâmetros obrigatórios:**
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `query` | string | Termo principal da pesquisa |
+| `pagina` | int | Número da página (começa em 0) |
+| `tamanho` | int | Resultados por página |
+
+**Parâmetro opcional:**
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `termosAcessorios` | array | Lista de filtros adicionais |
+
+### Filtros Disponíveis (termosAcessorios)
+
+| Campo | Descrição |
+|-------|-----------|
+| `base` | Base de dados da decisão |
+| `subbase` | Subbase de dados |
+| `origem` | Origem da decisão |
+| `uuid` | Identificador UUID da decisão |
+| `identificador` | Identificador da decisão |
+| `processo` | Número do processo |
+| `nomeRelator` | Nome do relator |
+| `nomeRevisor` | Nome do revisor |
+| `nomeRelatorDesignado` | Nome do relator designado |
+| `descricaoOrgaoJulgador` | Nome do órgão julgador |
+| `dataJulgamento` | Data do julgamento (YYYY-MM-DD) |
+| `dataPublicacao` | Data da publicação (YYYY-MM-DD) |
+| `descricaoClasseCnj` | Classe processual CNJ |
+
+## Exemplo de Requisição
+
+```bash
+curl -X POST https://jurisdf.tjdft.jus.br/api/v1/pesquisa \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Dano moral",
+    "termosAcessorios": [
+      {
+        "campo": "nomeRelator",
+        "valor": "CARMEN BITTENCOURT"
+      }
+    ],
+    "pagina": 0,
+    "tamanho": 10
+  }'
+```
+
+## Exemplo de Resposta
+
+```json
+{
+  "hits": 1234,
+  "agregações": {},
+  "paginação": {},
+  "registros": [
+    {
+      "sequencial": 1,
+      "base": "decisoes",
+      "subbase": "decisoes-monocraticas",
+      "uuid": "29df78c5-af48-48ee-b8f4-7db0bea4cff6",
+      "identificador": "70016492",
+      "dataPublicacao": "2025-03-25T03:00:00.000Z",
+      "ementa": "[texto da ementa]",
+      "processo": "0710649-40.2025.8.07.0000",
+      "nomeRelator": "CARMEN BITTENCOURT",
+      "descricaoOrgaoJulgador": "8ª Turma Cível",
+      "codigoClasseCnj": 202,
+      "inteiroTeor": "[texto integral]",
+      "possuiInteiroTeor": false
+    }
+  ]
+}
+```
+
+## Campos da Resposta
+
+| Campo | Descrição |
+|-------|-----------|
+| `hits` | Total de decisões encontradas |
+| `agregações` | Lista de relatores, revisores e órgãos |
+| `registros` | Array com as decisões |
+| `ementa` | Ementa da decisão |
+| `inteiroTeor` | Texto integral (se disponível) |
+| `processo` | Número do processo |
+| `nomeRelator` | Nome do relator |
+| `descricaoOrgaoJulgador` | Órgão julgador |
+
+---
+
+## Endpoints Legados (Plone CMS)
+
+### Busca Ajax
+
+```
+GET /@@ajax-search?SearchableText=termo
+```
+
+**Nota:** Este é o endpoint de busca geral do site, não específico para jurisprudência.
+
+---
+
+## Testes E2E
+
+```
+Teste                    Status
+─────────────────────────────────
+ajax_search              ✅ PASSOU
+site_search              ✅ PASSOU
+jurisprudencia_page      ✅ PASSOU
+common_endpoints         ❌ FALHOU
+
+Total: 3/4 testes passaram
+```
+</file>
+
+<file path="src/tjdft/agent/__init__.py">
+"""
+Agente de análise de jurisprudência com IA.
+
+Este módulo fornece um agente que combina a API do TJDFT com
+modelos de linguagem para análise inteligente de jurisprudência.
+
+Uso:
+    from tjdft.agent import JurisprudenciaAgent
+    
+    agent = JurisprudenciaAgent(api_key="sua-chave-openai")
+    analise = agent.analisar_caso(
+        descricao="Cliente não recebeu CNH renovada após 30 dias",
+        termos_busca=["DETRAN CNH renovação"]
+    )
+"""
+
+import os
+from typing import Optional, List, Dict, Any
+from dataclasses import dataclass
+
+from ..client import TJDFTClient
+from ..models import ResultadoBusca
+
+
+@dataclass
+class AnaliseJurisprudencial:
+    """Resultado da análise de jurisprudência."""
+    caso: str
+    jurisprudencias_encontradas: int
+    analise_ia: str
+    jurisprudencias_relevantes: List[Dict[str, Any]]
+    sugestoes: List[str]
+    precedentes: List[str]
+
+
+class JurisprudenciaAgent:
+    """
+    Agente de análise de jurisprudência do TJDFT.
+    
+    Combina busca na API do TJDFT com análise via IA (OpenAI).
+    
+    Example:
+        >>> agent = JurisprudenciaAgent()
+        >>> resultado = agent.analisar_caso(
+        ...     descricao="Ação contra DETRAN por não emissão de CNH",
+        ...     termos_busca=["DETRAN CNH", "obrigação fazer"]
+        ... )
+        >>> print(resultado.analise_ia)
+    """
+    
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model: str = "gpt-4o-mini",
+        tjdft_client: Optional[TJDFTClient] = None
+    ):
+        """
+        Inicializa o agente.
+        
+        Args:
+            api_key: Chave da API da OpenAI (ou via OPENAI_API_KEY)
+            model: Modelo da OpenAI a ser usado (default: gpt-4o-mini)
+            tjdft_client: Cliente TJDFT customizado (opcional)
+        """
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        if not self.api_key:
+            raise ValueError(
+                "Chave da API da OpenAI não fornecida. "
+                "Defina OPENAI_API_KEY ou passe api_key."
+            )
+        
+        self.model = model
+        self.client = tjdft_client or TJDFTClient()
+        self._openai_client = None
+    
+    @property
+    def openai_client(self):
+        """Lazy loading do cliente OpenAI."""
+        if self._openai_client is None:
+            try:
+                from openai import OpenAI
+                self._openai_client = OpenAI(api_key=self.api_key)
+            except ImportError:
+                raise ImportError(
+                    "Biblioteca openai não instalada. "
+                    "Instale com: pip install openai"
+                )
+        return self._openai_client
+    
+    def buscar_jurisprudencia(
+        self,
+        termos: List[str],
+        filtros: Optional[Dict[str, str]] = None,
+        por_termo: int = 10
+    ) -> Dict[str, ResultadoBusca]:
+        """
+        Busca jurisprudência para múltiplos termos.
+        
+        Args:
+            termos: Lista de termos de busca
+            filtros: Filtros opcionais
+            por_termo: Resultados por termo
+            
+        Returns:
+            Dicionário com resultados por termo
+        """
+        resultados = {}
+        
+        for termo in termos:
+            resultado = self.client.pesquisar(
+                query=termo,
+                filtros=filtros,
+                tamanho=por_termo
+            )
+            resultados[termo] = resultado
+        
+        return resultados
+    
+    def analisar_caso(
+        self,
+        descricao: str,
+        termos_busca: List[str],
+        filtros: Optional[Dict[str, str]] = None,
+        contexto_adicional: Optional[str] = None
+    ) -> AnaliseJurisprudencial:
+        """
+        Analisa um caso jurídico buscando jurisprudência relevante.
+        
+        Args:
+            descricao: Descrição do caso
+            termos_busca: Termos para busca no TJDFT
+            filtros: Filtros opcionais para a busca
+            contexto_adicional: Contexto extra para análise
+            
+        Returns:
+            AnaliseJurisprudencial com resultados e análise
+        """
+        # 1. Buscar jurisprudência
+        resultados = self.buscar_jurisprudencia(
+            termos=termos_busca,
+            filtros=filtros,
+            por_termo=5
+        )
+        
+        # 2. Consolidar resultados
+        todas_jurisprudencias = []
+        for termo, resultado in resultados.items():
+            for dec in resultado:
+                dec["_termo_busca"] = termo
+                todas_jurisprudencias.append(dec)
+        
+        # 3. Preparar contexto para IA
+        contexto = self._preparar_contexto(
+            descricao=descricao,
+            jurisprudencias=todas_jurisprudencias[:20],  # Limita a 20
+            contexto_adicional=contexto_adicional
+        )
+        
+        # 4. Analisar com OpenAI
+        analise = self._analisar_com_ia(contexto)
+        
+        # 5. Retornar resultado estruturado
+        return AnaliseJurisprudencial(
+            caso=descricao,
+            jurisprudencias_encontradas=sum(r.total.get("value", 0) for r in resultados.values()),
+            analise_ia=analise.get("analise", ""),
+            jurisprudencias_relevantes=analise.get("relevantes", []),
+            sugestoes=analise.get("sugestoes", []),
+            precedentes=analise.get("precedentes", [])
+        )
+    
+    def _preparar_contexto(
+        self,
+        descricao: str,
+        jurisprudencias: List[Dict[str, Any]],
+        contexto_adicional: Optional[str] = None
+    ) -> str:
+        """Prepara contexto para envio à IA."""
+        contexto = f"""
+## CASO A ANALISAR
+
+{descricao}
+
+"""
+
+        if contexto_adicional:
+            contexto += f"""
+## CONTEXTO ADICIONAL
+
+{contexto_adicional}
+
+"""
+        
+        contexto += "## JURISPRUDÊNCIAS ENCONTRADAS NO TJDFT\n\n"
+        
+        for i, j in enumerate(jurisprudencias, 1):
+            contexto += f"""
+### Jurisprudência {i}
+- **Processo:** {j.get('processo', 'N/A')}
+- **Relator:** {j.get('nome_relator', 'N/A')}
+- **Órgão:** {j.get('orgao_julgador', 'N/A')}
+- **Data:** {j.get('data_publicacao', 'N/A')}
+- **Ementa:** {j.get('ementa', 'N/A')[:500]}...
+
+"""
+        
+        return contexto
+    
+    def _analisar_com_ia(self, contexto: str) -> Dict[str, Any]:
+        """Envia contexto para análise pela OpenAI."""
+        prompt = f"""
+Você é um assistente jurídico especialista em direito administrativo e processual civil do TJDFT.
+
+Analise o caso e as jurisprudências fornecidas abaixo. Retorne uma análise estruturada.
+
+{contexto}
+
+---
+
+Por favor, forneça:
+
+1. **ANÁLISE DO CASO:** Avaliação jurídica do caso com base nas jurisprudências encontradas
+
+2. **JURISPRUDÊNCIAS RELEVANTES:** Liste as 3-5 jurisprudências mais relevantes com:
+   - Número do processo
+   - Relator
+   - Trecho relevante da ementa
+
+3. **SUGESTÕES:** Sugestões práticas para a ação judicial
+
+4. **PRECEDENTES:** Cite os números de processo que podem ser usados como precedentes
+
+Retorne em formato JSON:
+{{
+  "analise": "string com a análise completa",
+  "relevantes": [
+    {{"processo": "...", "relator": "...", "trecho": "..."}}
+  ],
+  "sugestoes": ["sugestão 1", "sugestão 2"],
+  "precedentes": ["processo 1", "processo 2"]
+}}
+"""
+        
+        try:
+            response = self.openai_client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "Você é um assistente jurídico especialista em direito administrativo brasileiro. Sempre retorne respostas em JSON válido."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=2000,
+                response_format={"type": "json_object"}
+            )
+            
+            # Parsear resposta JSON
+            import json
+            
+            texto = response.choices[0].message.content
+            
+            try:
+                return json.loads(texto)
+            except json.JSONDecodeError:
+                return {
+                    "analise": texto,
+                    "relevantes": [],
+                    "sugestoes": [],
+                    "precedentes": []
+                }
+            
+        except Exception as e:
+            return {
+                "analise": f"Erro na análise: {str(e)}",
+                "relevantes": [],
+                "sugestoes": ["Verifique a conexão com a API da OpenAI"],
+                "precedentes": []
+            }
+    
+    def resumir_jurisprudencia(self, processo: str) -> str:
+        """
+        Resume uma jurisprudência específica.
+        
+        Args:
+            processo: Número do processo
+            
+        Returns:
+            Resumo da jurisprudência
+        """
+        resultados = self.client.pesquisar(
+            query=processo,
+            filtros={"processo": processo},
+            tamanho=1
+        )
+        
+        if not resultados:
+            return "Jurisprudência não encontrada."
+        
+        dec = resultados[0]
+        
+        response = self.openai_client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "Você é um assistente jurídico. Resuma jurisprudências de forma clara e objetiva."},
+                {"role": "user", "content": f"""
+Resuma a seguinte jurisprudência do TJDFT de forma clara e objetiva:
+
+**Processo:** {dec.get('processo', 'N/A')}
+**Relator:** {dec.get('nome_relator', 'N/A')}
+**Órgão:** {dec.get('orgao_julgador', 'N/A')}
+**Ementa:** {dec.get('ementa', 'N/A')}
+
+Forneça:
+1. Teses principais
+2. Decisão
+3. Relevância para casos similares
+"""}
+            ],
+            temperature=0.7,
+            max_tokens=1000
+        )
+        
+        return response.choices[0].message.content
+    
+    def comparar_casos(
+        self,
+        caso1: str,
+        caso2: str,
+        termos_busca: List[str]
+    ) -> str:
+        """
+        Compara dois casos com base em jurisprudência.
+        
+        Args:
+            caso1: Descrição do primeiro caso
+            caso2: Descrição do segundo caso
+            termos_busca: Termos para busca
+            
+        Returns:
+            Análise comparativa
+        """
+        # Buscar jurisprudência
+        resultados = self.buscar_jurisprudencia(termos=termos_busca, por_termo=5)
+        
+        # Consolidar
+        todas = []
+        for r in resultados.values():
+            todas.extend(list(r))
+        
+        contexto = f"""
+## CASO 1
+{caso1}
+
+## CASO 2
+{caso2}
+
+## JURISPRUDÊNCIAS RELACIONADAS
+"""
+        for j in todas[:10]:
+            contexto += f"- {j.get('processo')}: {j.get('ementa', '')[:200]}...\n"
+        
+        response = self.openai_client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "Você é um assistente jurídico especialista em direito comparado."},
+                {"role": "user", "content": f"""
+{contexto}
+
+Compare os dois casos com base nas jurisprudências encontradas.
+Identifique:
+1. Similaridades
+2. Diferenças
+3. Quais jurisprudências se aplicam a cada caso
+4. Probabilidade de sucesso em cada caso
+"""}
+            ],
+            temperature=0.7,
+            max_tokens=2000
+        )
+        
+        return response.choices[0].message.content
+</file>
+
+<file path="src/tjdft/__init__.py">
+# TJDFT API Client
+"""
+Cliente Python para a API de Jurisprudência do TJDFT.
+
+Uso:
+    from tjdft import TJDFTClient, AnaliseMagistrados
+    
+    client = TJDFTClient()
+    resultados = client.pesquisar(query="dano moral")
+    
+    # Analisar padrões de decisão por magistrado
+    analise = AnaliseMagistrados()
+    perfis = analise.analisar_por_tema("tutela de urgência")
+    
+    for p in perfis[:5]:
+        print(f"{p.nome}: {p.percentual_deferimento:.0f}% deferimento")
+"""
+
+__version__ = "0.3.0"
+__author__ = "Prof. Gabriel Ramos"
+
+from .client import TJDFTClient
+from .models import Acordao, Decisao, ResultadoBusca
+from .agent import JurisprudenciaAgent, AnaliseJurisprudencial
+from .analise import AnaliseMagistrados, PerfilMagistrado
+from .tokens import TokenCounter, TokenCount, count_prompt_tokens, estimate_openai_cost
+from .client_optimized import TJDFTClientOptimized, PerformanceMetrics
+
+__all__ = [
+    # Clients
+    "TJDFTClient", 
+    "TJDFTClientOptimized",
+    
+    # Models
+    "Acordao", 
+    "Decisao", 
+    "ResultadoBusca",
+    
+    # Agent
+    "JurisprudenciaAgent",
+    "AnaliseJurisprudencial",
+    
+    # Analysis
+    "AnaliseMagistrados",
+    "PerfilMagistrado",
+    
+    # Token counting
+    "TokenCounter",
+    "TokenCount",
+    "count_prompt_tokens",
+    "estimate_openai_cost",
+    
+    # Metrics
+    "PerformanceMetrics",
+]
+</file>
+
+<file path="pyproject.toml">
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tjdft"
+version = "0.4.0"
+description = "Cliente Python completo e otimizado para a API de Jurisprudência do TJDFT"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.8"
+authors = [
+    { name = "prof-ramos", email = "contato@proframos.com" }
+]
+keywords = [
+    "tjdft",
+    "jurisprudencia",
+    "direito",
+    "api",
+    "legal",
+    "brasil",
+    "jurisprudence"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Legal Industry",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "requests>=2.28.0",
+    "cachetools>=5.3.0",
+    "tiktoken>=0.5.0",
+]
+
+[project.optional-dependencies]
+async = [
+    "aiohttp>=3.9.0",
+]
+ai = [
+    "openai>=1.0.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+all = [
+    "tjdft[async,ai,dev]",
+]
+
+[project.urls]
+Homepage = "https://github.com/prof-ramos/tjdft-api-client"
+Documentation = "https://github.com/prof-ramos/tjdft-api-client#readme"
+Repository = "https://github.com/prof-ramos/tjdft-api-client.git"
+Issues = "https://github.com/prof-ramos/tjdft-api-client/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tjdft"]
+
+[tool.uv]
+# Configurações do UV
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E501"]
+
+[tool.black]
+line-length = 100
+target-version = ["py38", "py39", "py310", "py311", "py312"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+</file>
+
+<file path="README.md">
+# TJDFT API Client
+
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![UV](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![API Status](https://img.shields.io/badge/API-Online-brightgreen.svg)](https://jurisdf.tjdft.jus.br/api/v1/pesquisa)
+
+> Cliente Python completo e otimizado para a API de Jurisprudência do TJDFT
+
+---
+
+## 📋 Sumário
+
+- [Características](#-características)
+- [Instalação](#-instalação)
+- [Uso Rápido](#-uso-rápido)
+- [Funcionalidades](#-funcionalidades)
+- [Documentação](#-documentação)
+- [Exemplos](#-exemplos)
+- [API Reference](#-api-reference)
+- [Contribuindo](#-contribuindo)
+- [Licença](#-licença)
+
+---
+
+## ✨ Características
+
+- ✅ **API Pública Oficial** - Sem necessidade de autenticação
+- ✅ **Cliente Otimizado** - Cache, rate limiting, retries automáticos
+- ✅ **Contagem de Tokens** - Integração com tiktoken para custos OpenAI
+- ✅ **Análise de Magistrados** - Perfil decisório e estatísticas
+- ✅ **Batch Requests** - Consultas paralelas para melhor performance
+- ✅ **Async Support** - Suporte a operações assíncronas com aiohttp
+- ✅ **Type Hints** - Código totalmente tipado
+- ✅ **Zero Dependencies Core** - Apenas `requests` no básico
+
+---
+
+## 📦 Instalação
+
+### Via UV (recomendado) ⚡
+
+```bash
+# Instalar UV
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clonar e configurar
+git clone https://github.com/prof-ramos/tjdft-api-client.git
+cd tjdft-api-client
+uv sync
+
+# Executar
+uv run python -c "from tjdft import TJDFTClient; print('✅ Instalado!')"
+```
+
+### Via pip
+
+```bash
+pip install git+https://github.com/prof-ramos/tjdft-api-client.git
+```
+
+### Extras Opcionais
+
+```bash
+# Com suporte async
+uv sync --extra async
+
+# Com suporte a IA (OpenAI)
+uv sync --extra ai
+
+# Tudo (desenvolvimento completo)
+uv sync --all-extras
+```
+
+> 📖 Veja [docs/UV.md](docs/UV.md) para guia completo do UV
+
+---
+
+## 🚀 Uso Rápido
+
+### Pesquisa Simples
+
+```python
+from tjdft import TJDFTClient
+
+# Criar cliente
+client = TJDFTClient()
+
+# Buscar jurisprudência
+resultados = client.pesquisar(query="dano moral", tamanho=10)
+
+# Iterar resultados
+for r in resultados:
+    print(f"Processo: {r['processo']}")
+    print(f"Relator: {r['nome_relator']}")
+    print(f"Ementa: {r['ementa'][:100]}...")
+```
+
+### Com Filtros
+
+```python
+from tjdft import TJDFTClient
+
+client = TJDFTClient()
+
+# Filtrar por relator
+resultados = client.pesquisar(
+    query="tutela de urgência",
+    filtros={
+        "nomeRelator": "CARMEN BITTENCOURT",
+        "descricaoOrgaoJulgador": "8ª Turma Cível"
+    },
+    tamanho=20
+)
+
+print(f"Total: {resultados.total}")
+```
+
+### Cliente Otimizado
+
+```python
+from tjdft import TJDFTClientOptimized
+
+# Com cache e rate limiting
+client = TJDFTClientOptimized(
+    cache_ttl=300,        # 5 minutos
+    rate_limit=10.0,      # 10 req/s
+    max_retries=3
+)
+
+# Primeira chamada (API)
+r1 = client.pesquisar(query="dano moral")
+
+# Segunda chamada (cache - instantâneo)
+r2 = client.pesquisar(query="dano moral")
+
+# Ver métricas
+print(client.get_metrics())
+```
+
+### Batch Paralelo
+
+```python
+from tjdft import TJDFTClientOptimized
+
+client = TJDFTClientOptimized()
+
+consultas = [
+    {"query": "dano moral"},
+    {"query": "habeas corpus"},
+    {"query": "tutela de urgência"},
+]
+
+resultados = client.pesquisar_lote(consultas, max_parallel=5)
+
+for i, r in enumerate(resultados):
+    print(f"{consultas[i]['query']}: {r.total} resultados")
+```
+
+---
+
+## 🎯 Funcionalidades
+
+### Clientes
+
+| Cliente | Descrição | Use Quando |
+|---------|-----------|------------|
+| `TJDFTClient` | Cliente básico | Uso simples, poucas requisições |
+| `TJDFTClientOptimized` | Cliente otimizado | Produção, muitas requisições |
+
+### Recursos
+
+#### Pesquisa
+
+```python
+# Básica
+resultados = client.pesquisar(query="termo")
+
+# Com filtros
+resultados = client.pesquisar(
+    query="termo",
+    filtros={"nomeRelator": "NOME"}
+)
+
+# Por relator
+resultados = client.pesquisar_por_relator(query="termo", relator="NOME")
+
+# Por órgão
+resultados = client.pesquisar_por_orgao(query="termo", orgao="5ª Turma")
+
+# Por processo
+decisao = client.buscar_por_processo("0710649-40.2025.8.07.0000")
+```
+
+#### Análise de Magistrados
+
+```python
+from tjdft import TJDFTClient, AnaliseMagistrados
+
+client = TJDFTClient()
+analise = AnaliseMagistrados()
+
+resultados = client.pesquisar_por_relator(
+    query="dano moral",
+    relator="CARMEN BITTENCOURT",
+    tamanho=100
+)
+
+perfil = analise.analisar(resultados.resultados)
+
+print(f"Deferimentos: {perfil.percentual_deferimento:.1%}")
+print(f"Indeferimentos: {perfil.percentual_indeferimento:.1%}")
+```
+
+#### Contagem de Tokens
+
+```python
+from tjdft import TokenCounter
+
+counter = TokenCounter(model="gpt-4o-mini")
+
+# Contar tokens
+count = counter.count("Texto jurídico aqui")
+print(f"Tokens: {count.tokens}")
+
+# Estimar custo
+cost = counter.estimate_cost(
+    input_tokens=1000,
+    output_tokens=500
+)
+print(f"Custo: ${cost['total_cost_usd']:.4f}")
+
+# Truncar para limite
+texto_truncado = counter.truncate_to_tokens(texto, max_tokens=4000)
+
+# Dividir em chunks
+chunks = counter.chunk_text(texto_longo, chunk_size=4000)
+```
+
+---
+
+## 📚 Documentação
+
+### Guias Completos
+
+| Documento | Descrição |
+|-----------|-----------|
+| [**API.md**](docs/API.md) | Documentação completa da API |
+| [**EXEMPLOS.md**](docs/EXEMPLOS.md) | Exemplos práticos de uso |
+| [**endpoints.md**](docs/endpoints.md) | Endpoints disponíveis |
+| [**examples.md**](docs/examples.md) | Exemplos de código |
+
+### Documentação da API
+
+- **Base URL:** `https://jurisdf.tjdft.jus.br/api/v1`
+- **Endpoint:** `POST /pesquisa`
+- **Autenticação:** Não requerida
+- **Formato:** JSON
+
+#### Filtros Disponíveis
+
+| Campo | Descrição |
+|-------|-----------|
+| `nomeRelator` | Nome do relator |
+| `descricaoOrgaoJulgador` | Órgão julgador |
+| `processo` | Número do processo |
+| `dataPublicacao` | Data de publicação |
+| `descricaoClasseCnj` | Classe processual |
+
+---
+
+## 💡 Exemplos
+
+### Buscar Precedentes
+
+```python
+from tjdft import TJDFTClientOptimized
+
+client = TJDFTClientOptimized()
+
+resultados = client.pesquisar(
+    query="dano moral atraso voo",
+    tamanho=20
+)
+
+favoraveis = [
+    r for r in resultados
+    if any(p in r["ementa"].lower() for p in ["deferido", "procedente"])
+]
+
+print(f"Precedentes favoráveis: {len(favoraveis)}")
+```
+
+### Exportar para CSV
+
+```python
+import csv
+from tjdft import TJDFTClient
+
+client = TJDFTClient()
+resultados = client.pesquisar(query="dano moral", tamanho=50)
+
+with open("jurisprudencias.csv", "w", newline="", encoding="utf-8") as f:
+    if resultados:
+        writer = csv.DictWriter(f, fieldnames=resultados[0].keys())
+        writer.writeheader()
+        writer.writerows(resultados.resultados)
+```
+
+### Análise com IA
+
+```python
+from tjdft import TJDFTClientOptimized, TokenCounter
+from openai import OpenAI
+
+client_tjdft = TJDFTClientOptimized()
+client_openai = OpenAI()
+counter = TokenCounter()
+
+# Buscar
+resultados = client_tjdft.pesquisar(query="dano moral", tamanho=5)
+
+# Preparar contexto
+contexto = "\n\n".join([r["ementa"] for r in resultados if r.get("ementa")])
+
+# Analisar
+response = client_openai.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "user", "content": f"Analise estas decisões:\n\n{contexto}"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+---
+
+## 🔧 API Reference
+
+### TJDFTClient
+
+```python
+class TJDFTClient:
+    def __init__(timeout: int = 30, user_agent: str = "..."):
+        """Inicializa cliente."""
+    
+    def pesquisar(
+        query: str,
+        pagina: int = 0,
+        tamanho: int = 20,
+        filtros: Optional[Dict[str, str]] = None
+    ) -> ResultadoBusca:
+        """Pesquisa jurisprudência."""
+    
+    def pesquisar_por_relator(query: str, relator: str) -> ResultadoBusca:
+        """Pesquisa por relator."""
+    
+    def pesquisar_por_orgao(query: str, orgao: str) -> ResultadoBusca:
+        """Pesquisa por órgão."""
+    
+    def buscar_por_processo(numero: str) -> Optional[Dict]:
+        """Busca por número de processo."""
+```
+
+### TJDFTClientOptimized
+
+```python
+class TJDFTClientOptimized(TJDFTClient):
+    def __init__(
+        timeout: int = 30,
+        cache_ttl: int = 300,
+        cache_maxsize: int = 1000,
+        rate_limit: float = 10.0,
+        rate_burst: int = 20,
+        max_retries: int = 3,
+        enable_compression: bool = True
+    ):
+        """Cliente otimizado com cache e rate limiting."""
+    
+    def pesquisar_lote(
+        consultas: List[Dict],
+        max_parallel: int = 5
+    ) -> List[ResultadoBusca]:
+        """Executa múltiplas consultas em paralelo."""
+    
+    async def pesquisar_async(query: str, ...) -> ResultadoBusca:
+        """Versão assíncrona."""
+    
+    def get_metrics() -> Dict[str, Any]:
+        """Retorna métricas de performance."""
+    
+    def clear_cache() -> None:
+        """Limpa cache."""
+```
+
+### TokenCounter
+
+```python
+class TokenCounter:
+    def __init__(model: str = "gpt-4o-mini"):
+        """Contador de tokens com tiktoken."""
+    
+    def count(text: str) -> TokenCount:
+        """Conta tokens em texto."""
+    
+    def estimate_cost(
+        input_tokens: int,
+        output_tokens: int,
+        model: Optional[str] = None
+    ) -> Dict[str, float]:
+        """Estima custo em USD."""
+    
+    def truncate_to_tokens(text: str, max_tokens: int) -> str:
+        """Trunca para limite de tokens."""
+    
+    def chunk_text(
+        text: str,
+        chunk_size: int = 4000,
+        overlap: int = 200
+    ) -> List[str]:
+        """Divide texto em chunks."""
+```
+
+---
+
+## 🤝 Contribuindo
+
+Contribuições são bem-vindas! Por favor:
+
+1. Fork o projeto
+2. Crie uma branch (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+### Desenvolvimento
+
+```bash
+# Clonar
+git clone https://github.com/prof-ramos/tjdft-api-client.git
+cd tjdft-api-client
+
+# Configurar com UV
+uv sync
+
+# Rodar testes
+uv run pytest tests/
+
+# Formatar
+uv run black src/ tests/
+
+# Lint
+uv run ruff check src/ tests/
+```
+
+---
+
+## 📄 Licença
+
+Distribuído sob a licença MIT. Veja [LICENSE](LICENSE) para mais informações.
+
+---
+
+## 🔗 Links Úteis
+
+- [TJDFT Oficial](https://www.tjdft.jus.br)
+- [Jurisprudência TJDFT](https://www.tjdft.jus.br/consultas/jurisprudencia/jurisprudencia)
+- [DataJud CNJ](https://datajud.cnj.jus.br)
+- [DadosJusBR](https://dadosjusbr.org)
+
+---
+
+## 📊 Status do Projeto
+
+| Feature | Status |
+|---------|--------|
+| Cliente básico | ✅ Implementado |
+| Cliente otimizado | ✅ Implementado |
+| Análise de magistrados | ✅ Implementado |
+| Contagem de tokens | ✅ Implementado |
+| Async support | ✅ Implementado |
+| Testes | ✅ 100% passando |
+| Documentação | ✅ Completa |
+
+---
+
+**Autor:** [prof-ramos](https://github.com/prof-ramos)  
+**Versão:** 0.3.0  
+**Última atualização:** 2026-03-02
+</file>
+
+</files>

@@ -243,10 +243,17 @@ class TJDFTClient:
                 "possui_inteiro_teor": registro.get("possuiInteiroTeor", False),
             }
             resultados.append(resultado)
-        
+
+        # Extract total from hits (can be dict with 'value' or int)
+        hits = data.get("hits", {})
+        if isinstance(hits, dict):
+            total = hits.get("value", 0)
+        else:
+            total = hits
+
         return ResultadoBusca(
             resultados=resultados,
-            total=data.get("hits", 0),
+            total=total,
             pagina=data.get("pagina", 0),
             por_pagina=len(resultados),
             agregacoes=data.get("agregações", {})
